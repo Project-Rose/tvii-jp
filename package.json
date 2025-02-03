@@ -2,6 +2,10 @@
     "name": "tvii-jp",
     "module": "src/index.ts",
     "type": "module",
+    "scripts": {
+        "start": "bun src/index.ts",
+        "dev": "bun --watch src/index.ts"
+    },
     "devDependencies": {
         "@types/bun": "latest",
         "@types/express": "^5.0.0",
