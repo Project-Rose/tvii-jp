@@ -33,6 +33,6 @@
             "eslint --fix",
             "prettier --write"
         ],
-        "*.{css,json,lock,md}": "prettier --write"
+        "*.{css,json,md}": "prettier --write"
     }
 }
