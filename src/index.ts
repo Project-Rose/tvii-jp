@@ -1,7 +1,7 @@
 import express, { type Application } from "express";
 import { env } from "@/env";
 import { join } from "path";
-import { exports } from "./routes/exports";
+import { exports } from "@/routes/exports";
 import { logger } from "@/utils/logger";
 
 const app: Application = express();
