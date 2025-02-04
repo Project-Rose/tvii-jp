@@ -1,4 +1,18 @@
-h1, h2, h3, h4, h5, h6, p, ul, ol, menu, li, table, tr, th, td {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol,
+menu,
+li,
+table,
+tr,
+th,
+td {
     font-size: 100%;
     font-weight: normal;
     margin: 0;
@@ -6,7 +20,7 @@ h1, h2, h3, h4, h5, h6, p, ul, ol, menu, li, table, tr, th, td {
 }
 
 * {
-    font-family: 'nintendo_NTLG-DB_001';
+    font-family: "nintendo_NTLG-DB_001";
 }
 body {
     position: relative;
@@ -53,6 +67,6 @@ body {
     border-bottom: none;
     -webkit-border-top-right-radius: 25px;
     border-top-right-radius: 25px;
-    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.40);
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
     z-index: 2;
 }
