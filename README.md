@@ -1,3 +1,3 @@
-# tvii-jp
+# TVii-JP
 
 Japanese TVii
