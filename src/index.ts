@@ -10,6 +10,8 @@ const port: number = Number(env.VINO_JP_CONFIG_PORT);
 // Middleware
 app.use(express.static(join(__dirname, "..", "static"))); // Serves our static files
 
+app.disable("X-Powered-By");
+
 // Auto imports routes instead of import of bunch manually
 for (let i = 0; i < exports.length; i++) {
     const route = exports[i];
