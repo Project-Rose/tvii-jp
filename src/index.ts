@@ -7,7 +7,7 @@ import { logger } from "@/utils/logger";
 const app: Application = express();
 const port: number = Number(env.VINO_JP_CONFIG_PORT);
 
-// Middleware
+// Middleware (test)
 app.use(express.static(join(__dirname, "..", "static"))); // Serves our static files
 
 app.disable("X-Powered-By");
