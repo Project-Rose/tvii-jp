@@ -3,6 +3,7 @@
         "esbenp.prettier-vscode",
         "YoavBls.pretty-ts-errors",
         "dbaeumer.vscode-eslint",
-        "oven.bun-vscode"
+        "oven.bun-vscode",
+        "AndreyMakarenko.jsrender-jsviews"
     ]
 }
