@@ -12,7 +12,8 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set environment variables
-      run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+      run: |
+        echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
 
     - name: Determine tag
       run: |
@@ -24,14 +25,17 @@ jobs:
           echo "TAG=dev" >> $GITHUB_ENV
         fi
 
-    - name: Log in to GHCR
+    - name: Set repository name in lowercase
+      run: echo "REPO_NAME=$(echo '${{ github.repository_owner }}/tvii-jp' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+    - name: Log in to GitHub Container Registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
     - name: Build the Docker image
       run: |
         docker build . --file Dockerfile --tag ghcr.io/${REPO_NAME}:${TAG}-latest
         docker build . --file Dockerfile --tag ghcr.io/${REPO_NAME}:${TAG}-$(date +%s)
-    
+
     - name: Push the Docker image
       run: |
         docker push ghcr.io/${REPO_NAME}:${TAG}-latest
