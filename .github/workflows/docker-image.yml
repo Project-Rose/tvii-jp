@@ -1,0 +1,38 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main", "stg", "dev" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set environment variables
+      run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+    - name: Determine tag
+      run: |
+        if [[ "$BRANCH_NAME" == "main" ]]; then
+          echo "TAG=prod" >> $GITHUB_ENV
+        elif [[ "$BRANCH_NAME" == "stg" ]]; then
+          echo "TAG=stg" >> $GITHUB_ENV
+        elif [[ "$BRANCH_NAME" == "dev" ]]; then
+          echo "TAG=dev" >> $GITHUB_ENV
+        fi
+
+    - name: Log in to GHCR
+      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+
+    - name: Build the Docker image
+      run: |
+        docker build . --file Dockerfile --tag ghcr.io/${{ github.repository }}:${TAG}-latest
+        docker build . --file Dockerfile --tag ghcr.io/${{ github.repository }}:${TAG}-$(date +%s)
+
+    - name: Push the Docker image
+      run: |
+        docker push ghcr.io/${{ github.repository }}:${TAG}-latest
+        docker push ghcr.io/${{ github.repository }}:${TAG}-$(date +%s)
