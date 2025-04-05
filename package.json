@@ -17,8 +17,7 @@
         "globals": "^15.14.0",
         "prettier": "^3.4.2",
         "typescript": "^5.0.0",
-        "typescript-eslint": "^8.23.0",
-        "husky": "^8.0.0"
+        "typescript-eslint": "^8.23.0"
     },
     "dependencies": {
         "@t3-oss/env-core": "^0.12.0",
