@@ -15,19 +15,10 @@ app.disable("X-Powered-By");
 // Auto imports routes instead of import of bunch manually
 for (let i = 0; i < exports.length; i++) {
     const route = exports[i];
-    logger.attempt(
-        `Attempting to import '${route.name}' routes at '${route.path}'...`
+    app.use(route.path, route.route);
+    logger.success(
+        `Successfully imported '${route.name}' routes at '${route.path}'!`
     );
-    try {
-        app.use(route.path, route.route);
-        logger.success(
-            `Successfully imported '${route.name}' routes at '${route.path}'!`
-        );
-    } catch (e) {
-        logger.error(
-            `Could not import '${route.name}' routes at '${route.path}'! ${e}`
-        );
-    }
 }
 
 // Starts the server
