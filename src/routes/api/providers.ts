@@ -5,11 +5,10 @@ import { logger } from "@/utils/logger";
 
 const router: Router = express.Router();
 
-const zipcodeSchema = z.string().regex(/^[0-9]{5}$/);
-
 router.get("/:zipcode", async (req: Request, res: Response) => {
     const { zipcode } = req.params;
 
+    const zipcodeSchema = z.string().regex(/^[0-9]{5}$/);
     const result = zipcodeSchema.safeParse(zipcode);
 
     if (!result.success) {
@@ -27,7 +26,7 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
 
     try {
         const data = await fetch(
-            `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${zipcode}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+            `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${result.data}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
         const response = await data.json();
@@ -36,18 +35,88 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
             endpoint: "/api/v1/providers/:zipcode",
             hasError: 0,
             result: response.data.items,
-            zipcode: zipcode,
+            zipcode: result.data,
             country: response.country || null,
         });
 
         return;
     } catch (e: unknown) {
-        logger.error(
-            `Error in /api/v1/providers/${req.params["zipcode"]}: ${e}`
-        );
+        logger.error(`Error in /api/v1/providers/${result.data}: ${e}`);
 
         res.status(500).json({
             endpoint: "/api/v1/providers/:zipcode",
+            hasError: 1,
+            result: {
+                error: 500,
+                message: "Internal Server Error",
+            },
+        });
+
+        return;
+    }
+});
+
+router.get("/lineup/:providerId", async (req: Request, res: Response) => {
+    const { providerId } = req.params;
+    const { start = Math.floor(Date.now() / 1000), duration = 120 } = req.query;
+
+    const providerIdSchema = z.string().regex(/^[0-9]{10}$/);
+    const querySchema = z.object({
+        start: z.coerce.number().int().positive(),
+        duration: z.coerce.number().int().min(30).max(1440),
+    });
+
+    const idResult = providerIdSchema.safeParse(providerId);
+    const queryResult = querySchema.safeParse({ start, duration });
+
+    if (!idResult.success) {
+        res.status(400).json({
+            endpoint: "/api/v1/providers/lineup/:providerId",
+            hasError: 1,
+            result: {
+                error: 400,
+                message: "Invalid Provider ID",
+            },
+        });
+        return;
+    }
+
+    if (!queryResult.success) {
+        res.status(400).json({
+            endpoint: "/api/v1/providers/lineup/:providerId",
+            hasError: 1,
+            result: {
+                error: 400,
+                message: "Invalid Query Parameters",
+            },
+        });
+        return;
+    }
+
+    try {
+        const data = await fetch(
+            `https://backend.tvguide.com/tvschedules/tvguide/${idResult.data}/web?start=${queryResult.data.start}&duration=${queryResult.data.duration}&apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+        );
+
+        const response = await data.json();
+
+        res.status(200).json({
+            endpoint: "/api/v1/providers/lineup/:providerId",
+            hasError: 0,
+            result: response.data.items,
+            providerId: idResult.data,
+            start: queryResult.data.start,
+            duration: queryResult.data.duration,
+        });
+
+        return;
+    } catch (e: unknown) {
+        logger.error(
+            `Error in /api/v1/providers/lineup/${idResult.data}: ${e}`
+        );
+
+        res.status(500).json({
+            endpoint: "/api/v1/providers/lineup/:providerId",
             hasError: 1,
             result: {
                 error: 500,
