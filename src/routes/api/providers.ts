@@ -128,4 +128,55 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
     }
 });
 
+router.get("/channels/:providerId", async (req: Request, res: Response) => {
+    const { providerId } = req.params;
+
+    const providerIdSchema = z.string().regex(/^[0-9]{10}$/);
+    const idResult = providerIdSchema.safeParse(providerId);
+
+    if (!idResult.success) {
+        res.status(400).json({
+            endpoint: "/api/v1/providers/channels/:providerId",
+            hasError: 1,
+            result: {
+                error: 400,
+                message: "Invalid Provider ID",
+            },
+        });
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `https://backend.tvguide.com/tvschedules/tvguide/serviceprovider/${idResult.data}/sources/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+        );
+
+        const data = await response.json();
+
+        res.status(200).json({
+            endpoint: "/api/v1/providers/channels/:providerId",
+            hasError: 0,
+            result: data.data.items,
+            providerId: idResult.data,
+        });
+
+        return;
+    } catch (e: unknown) {
+        logger.error(
+            `Error in /api/v1/providers/channels/${idResult.data}: ${e}`
+        );
+
+        res.status(500).json({
+            endpoint: "/api/v1/providers/channels/:providerId",
+            hasError: 1,
+            result: {
+                error: 500,
+                message: "Internal Server Error",
+            },
+        });
+
+        return;
+    }
+});
+
 export { router as providers };
