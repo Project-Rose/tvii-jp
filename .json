@@ -1,0 +1,33 @@
+{
+    "data": {
+        "duration": "120",
+        "providerId": "9166049857",
+        "startTime": "1744061216",
+        "items": [
+            {
+                "channel": {
+                    "fullName": "WABC-DT New York, N.Y. (ABC)",
+                    "name": "WABC-DT",
+                    "number": "2",
+                    "sourceId": 9200000057,
+                    "legacySourceId": null,
+                    "networkName": "ABC",
+                    "networkId": 2,
+                    "logo": "/provider/8/4/8-9200000057.png"
+                },
+                "programSchedules": [
+                    {
+                        "airingAttrib": 524304,
+                        "catId": 4,
+                        "startTime": 1744059600,
+                        "endTime": 1744063200,
+                        "programId": 9000020063,
+                        "title": "Eyewitness News at 5:00",
+                        "rating": null,
+                        "programDetails": "https://backend.tvguide.com/tvschedules/tvguide/programdetails/9000020063/web"
+                    }
+                ]
+            }
+        ]
+    }
+}

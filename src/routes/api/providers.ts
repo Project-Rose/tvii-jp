@@ -25,18 +25,18 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
     }
 
     try {
-        const data = await fetch(
+        const response = await fetch(
             `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${result.data}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
-        const response = await data.json();
+        const data = await response.json();
 
         res.status(200).json({
             endpoint: "/api/v1/providers/:zipcode",
             hasError: 0,
-            result: response.data.items,
+            result: data.data.items,
             zipcode: result.data,
-            country: response.country || null,
+            country: data.country || null,
         });
 
         return;
@@ -94,16 +94,16 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
     }
 
     try {
-        const data = await fetch(
+        const response = await fetch(
             `https://backend.tvguide.com/tvschedules/tvguide/${idResult.data}/web?start=${queryResult.data.start}&duration=${queryResult.data.duration}&apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
-        const response = await data.json();
+        const data = await response.json();
 
         res.status(200).json({
             endpoint: "/api/v1/providers/lineup/:providerId",
             hasError: 0,
-            result: response.data.items,
+            result: data.data.items,
             providerId: idResult.data,
             start: queryResult.data.start,
             duration: queryResult.data.duration,
