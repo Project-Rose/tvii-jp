@@ -5,6 +5,33 @@ import { logger } from "@/utils/logger";
 
 const router: Router = express.Router();
 
+interface Channel {
+    fullName: string;
+    name: string;
+    number: string;
+    sourceId: number;
+    legacySourceId: number | null;
+    networkName: string;
+    networkId: number;
+    logo: string;
+}
+
+interface ProgramSchedule {
+    airingAttrib: number;
+    catId: number;
+    startTime: number;
+    endTime: number;
+    programId: number;
+    title: string;
+    rating: string | null;
+    programDetails: string;
+}
+
+interface LineupItem {
+    channel: Channel;
+    programSchedules: ProgramSchedule[];
+}
+
 router.get("/:zipcode", async (req: Request, res: Response) => {
     const { zipcode } = req.params;
 
@@ -100,10 +127,21 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
 
         const data = await response.json();
 
+        // Transform program details URLs
+        const transformedItems = data.data.items.map((item: LineupItem) => ({
+            ...item,
+            programSchedules: item.programSchedules.map(
+                (program: ProgramSchedule) => ({
+                    ...program,
+                    programDetails: `/api/v1/programs/${program.programId}`,
+                })
+            ),
+        }));
+
         res.status(200).json({
             endpoint: "/api/v1/providers/lineup/:providerId",
             hasError: 0,
-            result: data.data.items,
+            result: transformedItems,
             providerId: idResult.data,
             start: queryResult.data.start,
             duration: queryResult.data.duration,

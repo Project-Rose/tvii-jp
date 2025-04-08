@@ -1,6 +1,7 @@
 import { vino } from "@/routes/ui/vino-jp";
 import { vinoDebug } from "@/routes/ui/debug";
 import { providers } from "@/routes/api/providers";
+import { programs } from "@/routes/api/programs";
 import { type Router } from "express";
 
 interface Routes {
@@ -24,6 +25,11 @@ const routes: Routes[] = [
         name: "Vino API Providers (JP)",
         path: "/api/v1/providers",
         route: providers,
+    },
+    {
+        name: "Vino API Programs (JP)",
+        path: "/api/v1/programs",
+        route: programs,
     },
 ];
 
