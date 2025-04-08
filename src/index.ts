@@ -1,5 +1,6 @@
 import express, { type Application } from "express";
 import { env } from "@/env";
+import { access } from "./middleware/access";
 import { join } from "path";
 import { exports } from "@/routes/exports";
 import { logger } from "@/utils/logger";
@@ -8,6 +9,7 @@ const app: Application = express();
 const port: number = Number(env.VINO_JP_CONFIG_PORT);
 
 // Middleware
+app.use(access);
 app.use(express.static(join(__dirname, "..", "static"))); // Serves our static files
 
 app.disable("X-Powered-By");
