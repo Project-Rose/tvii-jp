@@ -1,70 +1,87 @@
 import express, { type Request, type Response, type Router } from "express";
+import crypto from "crypto";
 import { logger } from "@/utils/logger";
 import { z } from "zod";
+import { env } from "@/env";
 
 const router: Router = express.Router();
 
-// TODO: Do more research on how TV Guide handles images
-// NOTE: The API exposes this part of the URL: /:imageType/:num/:num2/:imageId, however there is a second, longer string (possibly a hash according to GPT),
-// that is not exposed in the API, but is used in the URL.
+// Define all schemas in one place
+const schemas = {
+    type: z.enum(["catalog"]),
+    imageType: z.string().regex(/^(provider)$/),
+    num: z.string().regex(/^[0-9]{1}$/),
+    imageId: z.string().regex(/^\d-\d{10}\.png$/),
+    fit: z.enum(["crop"]),
+    dimension: z.string().regex(/^[0-9]{1,4}$/),
+};
+
 router.get(
-    "/:imageType/:num/:num2/:imageId",
+    "/:type/:imageType/:num/:num2/:imageId",
     async (req: Request, res: Response) => {
-        const { imageType, num, num2, imageId } = req.params;
+        const { type, imageType, num, num2, imageId } = req.params;
+        const { fit = "crop", height = 64, width = 64 } = req.query;
 
-        const imageTypeSchema = z.string().regex(/^(provider)$/);
-        const numSchema = z.string().regex(/^[0-9]{1}$/);
-        const imageIdSchema = z.string().regex(/^\d-\d{10}\.png$/);
+        // Combine all validations into a single schema for cleaner validation
+        const validationSchema = z.object({
+            type: schemas.type,
+            imageType: schemas.imageType,
+            num: schemas.num,
+            num2: schemas.num,
+            imageId: schemas.imageId,
+            fit: schemas.fit,
+            height: schemas.dimension,
+            width: schemas.dimension,
+        });
 
-        const imageTypeResult = imageTypeSchema.safeParse(imageType);
-        const numResult = numSchema.safeParse(num);
-        const num2Result = numSchema.safeParse(num2);
-        const imageIdResult = imageIdSchema.safeParse(imageId);
+        // Use safeParse for all validations at once
+        const validationResult = validationSchema.safeParse({
+            type,
+            imageType,
+            num,
+            num2,
+            imageId,
+            fit,
+            height,
+            width,
+        });
 
-        if (!imageTypeResult.success) {
+        if (!validationResult.success) {
+            // Extract the first error and send a specific message
+            const errorPath = validationResult.error.errors[0].path.join(" ");
+            const errorMessage = `Invalid ${errorPath.charAt(0).toUpperCase() + errorPath.slice(1)}`;
+
             res.status(400).json({
-                endpoint: "/api/v1/images/:imageType/:num/:num2/:imageId",
+                endpoint: "/api/v1/images/:type/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 400,
-                    message: "Invalid Image Type",
+                    message: errorMessage,
                 },
             });
             return;
         }
 
-        if (!numResult.success || !num2Result.success) {
-            res.status(400).json({
-                endpoint: "/api/v1/images/:imageType/:num/:num2/:imageId",
-                hasError: 1,
-                result: {
-                    error: 400,
-                    message: "Invalid Numbers",
-                },
-            });
-            return;
-        }
+        // Now we can safely access the validated data
+        const validData = validationResult.data;
 
-        if (!imageIdResult.success) {
-            res.status(400).json({
-                endpoint: "/api/v1/images/:imageType/:num/:num2/:imageId",
-                hasError: 1,
-                result: {
-                    error: 400,
-                    message: "Invalid Image ID",
-                },
-            });
-            return;
-        }
+        const getHash = (t: string): string => {
+            const e = crypto.createHmac("sha1", env.VINO_JP_CONFIG_FASTLY_KEY);
+            return e.update(t).digest("hex");
+        };
 
         try {
-            // valid working URL: https://www.tvguide.com/a/img/resize/1380f342c040eeea449c1a634695dd0292fdd77a/catalog/provider/8/4/8-9200000057.png?fit=crop&height=64&width=64
-            const response = await fetch(
-                `https://www.tvguide.com/a/img/resize/1380f342c040eeea449c1a634695dd0292fdd77a/catalog/${imageType}/${num}/${num2}/${imageId}?fit=crop&height=64&width=64`
-            );
+            const basePath = `/${validData.type}/${validData.imageType}/${validData.num}/${validData.num2}/${validData.imageId}`;
+            const query = `?fit=${validData.fit}&height=${validData.height}&width=${validData.width}`;
+            const fullPath = `${basePath}${query}`;
+            const hash = getHash(fullPath);
+            const imageUrl = `https://www.tvguide.com/a/img/resize/${hash}${fullPath}`;
+
+            console.log(imageUrl);
+
+            const response = await fetch(imageUrl);
 
             if (!response.ok) {
-                logger.error(`${response.status}`);
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -81,18 +98,17 @@ router.get(
             return;
         } catch (e: unknown) {
             logger.error(
-                `Error in /api/v1/images/${imageType}/${num}/${num2}/${imageId}: ${e}`
+                `Error in /api/v1/images/${type}/${imageType}/${num}/${num2}/${imageId}: ${e}`
             );
 
             res.status(500).json({
-                endpoint: "/api/v1/images/:imageType/:num/:num2/:imageId",
+                endpoint: "/api/v1/images/:type/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 500,
                     message: "Internal Server Error",
                 },
             });
-
             return;
         }
     }

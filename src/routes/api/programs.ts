@@ -3,14 +3,22 @@ import { z } from "zod";
 
 const router: Router = express.Router();
 
+// Define schemas
+const schemas = {
+    programId: z.string().regex(/^[0-9]{10}$/),
+};
+
 router.get("/:programId", async (req: Request, res: Response) => {
     const { programId } = req.params;
 
-    const programIdSchema = z.string().regex(/^[0-9]{10}$/);
+    // Validate all inputs
+    const validationSchema = z.object({
+        programId: schemas.programId,
+    });
 
-    const idResult = programIdSchema.safeParse(programId);
+    const validationResult = validationSchema.safeParse({ programId });
 
-    if (!idResult.success) {
+    if (!validationResult.success) {
         res.status(400).json({
             endpoint: "/api/v1/programs/:programId",
             hasError: 1,
@@ -22,9 +30,12 @@ router.get("/:programId", async (req: Request, res: Response) => {
         return;
     }
 
+    // Access validated data
+    const { programId: validatedProgramId } = validationResult.data;
+
     try {
         const response = await fetch(
-            `https://backend.tvguide.com/tvschedules/tvguide/programdetails/${idResult.data}/web`
+            `https://backend.tvguide.com/tvschedules/tvguide/programdetails/${validatedProgramId}/web`
         );
 
         if (!response.ok) {
@@ -45,11 +56,11 @@ router.get("/:programId", async (req: Request, res: Response) => {
             endpoint: "/api/v1/programs/:programId",
             hasError: 0,
             result: JSON.parse(JSON.stringify(data.data.item, dateReplacer)),
-            programId: idResult.data,
+            programId: validatedProgramId,
         });
         return;
     } catch (e: unknown) {
-        console.error(`Error in /api/v1/programs/${idResult.data}: ${e}`);
+        console.error(`Error in /api/v1/programs/${validatedProgramId}: ${e}`);
 
         res.status(500).json({
             endpoint: "/api/v1/programs/:programId",

@@ -32,28 +32,40 @@ interface LineupItem {
     programSchedules: ProgramSchedule[];
 }
 
+// Define all schemas in one place
+const schemas = {
+    zipcode: z.string().regex(/^[0-9]{5}$/),
+    providerId: z.string().regex(/^[0-9]{10}$/),
+    queryParams: z.object({
+        start: z.coerce.number().int().positive(),
+        duration: z.coerce.number().int().min(30).max(1440),
+    }),
+};
+
 router.get("/:zipcode", async (req: Request, res: Response) => {
     const { zipcode } = req.params;
+    const endpoint = "/api/v1/providers/:zipcode";
 
-    const zipcodeSchema = z.string().regex(/^[0-9]{5}$/);
-    const result = zipcodeSchema.safeParse(zipcode);
+    // Validate zipcode
+    const validationResult = schemas.zipcode.safeParse(zipcode);
 
-    if (!result.success) {
+    if (!validationResult.success) {
         res.status(400).json({
-            endpoint: "/api/v1/providers/:zipcode",
+            endpoint,
             hasError: 1,
             result: {
                 error: 400,
                 message: "Invalid Zipcode Format",
             },
         });
-
         return;
     }
 
+    const validatedZipcode = validationResult.data;
+
     try {
         const response = await fetch(
-            `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${result.data}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+            `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${validatedZipcode}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
         if (!response.ok) {
@@ -63,26 +75,24 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
         const data = await response.json();
 
         res.status(200).json({
-            endpoint: "/api/v1/providers/:zipcode",
+            endpoint,
             hasError: 0,
             result: data.data.items,
-            zipcode: result.data,
+            zipcode: validatedZipcode,
             country: data.country || null,
         });
-
         return;
     } catch (e: unknown) {
-        logger.error(`Error in /api/v1/providers/${result.data}: ${e}`);
+        logger.error(`Error in ${endpoint}/${validatedZipcode}: ${e}`);
 
         res.status(500).json({
-            endpoint: "/api/v1/providers/:zipcode",
+            endpoint,
             hasError: 1,
             result: {
                 error: 500,
                 message: "Internal Server Error",
             },
         });
-
         return;
     }
 });
@@ -90,19 +100,19 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
 router.get("/lineup/:providerId", async (req: Request, res: Response) => {
     const { providerId } = req.params;
     const { start = Math.floor(Date.now() / 1000), duration = 120 } = req.query;
+    const endpoint = "/api/v1/providers/lineup/:providerId";
 
-    const providerIdSchema = z.string().regex(/^[0-9]{10}$/);
-    const querySchema = z.object({
-        start: z.coerce.number().int().positive(),
-        duration: z.coerce.number().int().min(30).max(1440),
+    // Validate all inputs
+    const providerIdResult = schemas.providerId.safeParse(providerId);
+    const queryParamsResult = schemas.queryParams.safeParse({
+        start,
+        duration,
     });
 
-    const idResult = providerIdSchema.safeParse(providerId);
-    const queryResult = querySchema.safeParse({ start, duration });
-
-    if (!idResult.success) {
+    // Check validation results
+    if (!providerIdResult.success) {
         res.status(400).json({
-            endpoint: "/api/v1/providers/lineup/:providerId",
+            endpoint,
             hasError: 1,
             result: {
                 error: 400,
@@ -112,9 +122,9 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
         return;
     }
 
-    if (!queryResult.success) {
+    if (!queryParamsResult.success) {
         res.status(400).json({
-            endpoint: "/api/v1/providers/lineup/:providerId",
+            endpoint,
             hasError: 1,
             result: {
                 error: 400,
@@ -124,9 +134,12 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
         return;
     }
 
+    const validatedProviderId = providerIdResult.data;
+    const validatedQueryParams = queryParamsResult.data;
+
     try {
         const response = await fetch(
-            `https://backend.tvguide.com/tvschedules/tvguide/${idResult.data}/web?start=${queryResult.data.start}&duration=${queryResult.data.duration}&apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+            `https://backend.tvguide.com/tvschedules/tvguide/${validatedProviderId}/web?start=${validatedQueryParams.start}&duration=${validatedQueryParams.duration}&apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
         if (!response.ok) {
@@ -147,42 +160,39 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
         }));
 
         res.status(200).json({
-            endpoint: "/api/v1/providers/lineup/:providerId",
+            endpoint,
             hasError: 0,
             result: transformedItems,
-            providerId: idResult.data,
-            start: queryResult.data.start,
-            duration: queryResult.data.duration,
+            providerId: validatedProviderId,
+            start: validatedQueryParams.start,
+            duration: validatedQueryParams.duration,
         });
-
         return;
     } catch (e: unknown) {
-        logger.error(
-            `Error in /api/v1/providers/lineup/${idResult.data}: ${e}`
-        );
+        logger.error(`Error in ${endpoint}/${validatedProviderId}: ${e}`);
 
         res.status(500).json({
-            endpoint: "/api/v1/providers/lineup/:providerId",
+            endpoint,
             hasError: 1,
             result: {
                 error: 500,
                 message: "Internal Server Error",
             },
         });
-
         return;
     }
 });
 
 router.get("/channels/:providerId", async (req: Request, res: Response) => {
     const { providerId } = req.params;
+    const endpoint = "/api/v1/providers/channels/:providerId";
 
-    const providerIdSchema = z.string().regex(/^[0-9]{10}$/);
-    const idResult = providerIdSchema.safeParse(providerId);
+    // Validate providerId
+    const validationResult = schemas.providerId.safeParse(providerId);
 
-    if (!idResult.success) {
+    if (!validationResult.success) {
         res.status(400).json({
-            endpoint: "/api/v1/providers/channels/:providerId",
+            endpoint,
             hasError: 1,
             result: {
                 error: 400,
@@ -192,9 +202,11 @@ router.get("/channels/:providerId", async (req: Request, res: Response) => {
         return;
     }
 
+    const validatedProviderId = validationResult.data;
+
     try {
         const response = await fetch(
-            `https://backend.tvguide.com/tvschedules/tvguide/serviceprovider/${idResult.data}/sources/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
+            `https://backend.tvguide.com/tvschedules/tvguide/serviceprovider/${validatedProviderId}/sources/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
         if (!response.ok) {
@@ -204,27 +216,23 @@ router.get("/channels/:providerId", async (req: Request, res: Response) => {
         const data = await response.json();
 
         res.status(200).json({
-            endpoint: "/api/v1/providers/channels/:providerId",
+            endpoint,
             hasError: 0,
             result: data.data.items,
-            providerId: idResult.data,
+            providerId: validatedProviderId,
         });
-
         return;
     } catch (e: unknown) {
-        logger.error(
-            `Error in /api/v1/providers/channels/${idResult.data}: ${e}`
-        );
+        logger.error(`Error in ${endpoint}/${validatedProviderId}: ${e}`);
 
         res.status(500).json({
-            endpoint: "/api/v1/providers/channels/:providerId",
+            endpoint,
             hasError: 1,
             result: {
                 error: 500,
                 message: "Internal Server Error",
             },
         });
-
         return;
     }
 });

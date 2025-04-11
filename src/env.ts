@@ -7,6 +7,7 @@ export const env = createEnv({
         VINO_JP_CONFIG_PORT: z.coerce.number().min(1).max(65535),
         VINO_JP_CONFIG_ENV: z.enum(["dev", "stg", "prod"]),
         VINO_JP_CONFIG_TVGUIDE_API_KEY: z.string().min(1),
+        VINO_JP_CONFIG_FASTLY_KEY: z.string().base64(),
         VINO_JP_CONFIG_BLOCK_PC: z.enum(["true", "false"]).default("true"),
     },
     runtimeEnv: process.env,
