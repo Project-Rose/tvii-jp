@@ -13,14 +13,14 @@ const schemas = {
     num: z.string().regex(/^[0-9]{1}$/),
     imageId: z.string().regex(/^\d-\d{10}\.png$/),
     fit: z.enum(["crop"]),
-    dimension: z.string().regex(/^[0-9]{1,4}$/),
+    dimension: z.string().regex(/^[0-9]{2,3}$/),
 };
 
 router.get(
     "/:type/:imageType/:num/:num2/:imageId",
     async (req: Request, res: Response) => {
         const { type, imageType, num, num2, imageId } = req.params;
-        const { fit = "crop", height = 64, width = 64 } = req.query;
+        const { fit = "crop", height = "64", width = "64" } = req.query;
 
         // Combine all validations into a single schema for cleaner validation
         const validationSchema = z.object({

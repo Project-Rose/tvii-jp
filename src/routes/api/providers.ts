@@ -148,9 +148,13 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
 
         const data = await response.json();
 
-        // Transform program details URLs
+        // Transform program details URLs and channel logo URLs
         const transformedItems = data.data.items.map((item: LineupItem) => ({
             ...item,
+            channel: {
+                ...item.channel,
+                logo: `/api/v1/images/catalog${item.channel.logo}`,
+            },
             programSchedules: item.programSchedules.map(
                 (program: ProgramSchedule) => ({
                     ...program,
@@ -218,7 +222,10 @@ router.get("/channels/:providerId", async (req: Request, res: Response) => {
         res.status(200).json({
             endpoint,
             hasError: 0,
-            result: data.data.items,
+            result: data.data.items.map((item: Channel) => ({
+                ...item,
+                logo: `/api/v1/images/catalog${item.logo}`,
+            })),
             providerId: validatedProviderId,
         });
         return;
