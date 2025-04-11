@@ -2,7 +2,7 @@ import { vino } from "@/routes/ui/vino-jp";
 import { vinoDebug } from "@/routes/ui/debug";
 import { providers } from "@/routes/api/providers";
 import { programs } from "@/routes/api/programs";
-import { images } from "@/routes/api/images";
+import { images } from "@/routes/images";
 import { type Router } from "express";
 
 interface Routes {
@@ -33,8 +33,8 @@ const routes: Routes[] = [
         route: programs,
     },
     {
-        name: "Vino API Programs (JP)",
-        path: "/api/v1/images",
+        name: "Vino Images (JP)",
+        path: "/images",
         route: images,
     },
 ];

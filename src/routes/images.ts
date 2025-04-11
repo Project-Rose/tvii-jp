@@ -1,10 +1,12 @@
 import express, { type Request, type Response, type Router } from "express";
+import NodeCache from "node-cache";
 import crypto from "crypto";
 import { logger } from "@/utils/logger";
 import { z } from "zod";
 import { env } from "@/env";
 
 const router: Router = express.Router();
+const imageCache = new NodeCache({ stdTTL: 3600 }); // 1 hr cache
 
 // Define all schemas in one place
 const schemas = {
@@ -52,7 +54,7 @@ router.get(
             const errorMessage = `Invalid ${errorPath.charAt(0).toUpperCase() + errorPath.slice(1)}`;
 
             res.status(400).json({
-                endpoint: "/api/v1/images/:type/:imageType/:num/:num2/:imageId",
+                endpoint: "/images/:type/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 400,
@@ -74,10 +76,26 @@ router.get(
             const basePath = `/${validData.type}/${validData.imageType}/${validData.num}/${validData.num2}/${validData.imageId}`;
             const query = `?fit=${validData.fit}&height=${validData.height}&width=${validData.width}`;
             const fullPath = `${basePath}${query}`;
+
+            // Check cache first
+            const cacheKey = fullPath;
+            const cachedImage = imageCache.get(cacheKey);
+            if (cachedImage) {
+                const { buffer, contentType } = cachedImage as {
+                    buffer: Buffer;
+                    contentType: string;
+                };
+                res.status(200)
+                    .set({
+                        "Content-Type": contentType,
+                        "Cache-Control": "public, max-age=31536000, immutable",
+                    })
+                    .send(buffer);
+                return;
+            }
+
             const hash = getHash(fullPath);
             const imageUrl = `https://www.tvguide.com/a/img/resize/${hash}${fullPath}`;
-
-            console.log(imageUrl);
 
             const response = await fetch(imageUrl);
 
@@ -89,6 +107,12 @@ router.get(
             const contentType =
                 response.headers.get("content-type") || "image/png";
 
+            // Store in cache
+            imageCache.set(cacheKey, {
+                buffer: Buffer.from(buffer),
+                contentType,
+            });
+
             res.status(200)
                 .set({
                     "Content-Type": contentType,
@@ -98,11 +122,11 @@ router.get(
             return;
         } catch (e: unknown) {
             logger.error(
-                `Error in /api/v1/images/${type}/${imageType}/${num}/${num2}/${imageId}: ${e}`
+                `Error in /images/${type}/${imageType}/${num}/${num2}/${imageId}: ${e}`
             );
 
             res.status(500).json({
-                endpoint: "/api/v1/images/:type/:imageType/:num/:num2/:imageId",
+                endpoint: "/images/:type/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 500,

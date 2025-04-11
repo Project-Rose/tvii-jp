@@ -153,7 +153,7 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
             ...item,
             channel: {
                 ...item.channel,
-                logo: `/api/v1/images/catalog${item.channel.logo}`,
+                logo: `/images/catalog${item.channel.logo}`,
             },
             programSchedules: item.programSchedules.map(
                 (program: ProgramSchedule) => ({
@@ -224,7 +224,7 @@ router.get("/channels/:providerId", async (req: Request, res: Response) => {
             hasError: 0,
             result: data.data.items.map((item: Channel) => ({
                 ...item,
-                logo: `/api/v1/images/catalog${item.logo}`,
+                logo: `/images/catalog${item.logo}`,
             })),
             providerId: validatedProviderId,
         });
