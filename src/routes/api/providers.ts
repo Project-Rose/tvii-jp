@@ -56,6 +56,10 @@ router.get("/:zipcode", async (req: Request, res: Response) => {
             `https://backend.tvguide.com/tvschedules/tvguide/serviceproviders/zipcode/${result.data}/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         res.status(200).json({
@@ -125,6 +129,10 @@ router.get("/lineup/:providerId", async (req: Request, res: Response) => {
             `https://backend.tvguide.com/tvschedules/tvguide/${idResult.data}/web?start=${queryResult.data.start}&duration=${queryResult.data.duration}&apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         // Transform program details URLs
@@ -188,6 +196,10 @@ router.get("/channels/:providerId", async (req: Request, res: Response) => {
         const response = await fetch(
             `https://backend.tvguide.com/tvschedules/tvguide/serviceprovider/${idResult.data}/sources/web?apiKey=${env.VINO_JP_CONFIG_TVGUIDE_API_KEY}`
         );
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const data = await response.json();
 

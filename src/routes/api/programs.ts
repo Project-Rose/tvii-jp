@@ -27,6 +27,10 @@ router.get("/:programId", async (req: Request, res: Response) => {
             `https://backend.tvguide.com/tvschedules/tvguide/programdetails/${idResult.data}/web`
         );
 
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
         const data = await response.json();
 
         // Transform any /Date(timestamp)/ format to string timestamp

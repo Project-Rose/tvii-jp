@@ -6,7 +6,7 @@ import { exports } from "@/routes/exports";
 import { logger } from "@/utils/logger";
 
 const app: Application = express();
-const port: number = Number(env.VINO_JP_CONFIG_PORT);
+const port: number = env.VINO_JP_CONFIG_PORT;
 
 // Middleware
 app.use(access);
