@@ -1,4 +1,5 @@
 import express, { type Application } from "express";
+import compression from "compression";
 import { env } from "@/env";
 import { access } from "./middleware/access";
 import { join } from "path";
@@ -9,6 +10,7 @@ const app: Application = express();
 const port: number = env.VINO_JP_CONFIG_PORT;
 
 // Middleware
+app.use(compression()); // Add compression
 app.use(access);
 app.use(express.static(join(__dirname, "..", "static"))); // Serves our static files
 
