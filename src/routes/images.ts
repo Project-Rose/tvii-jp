@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type Router } from "express";
 import NodeCache from "node-cache";
 import crypto from "crypto";
+import sharp from "sharp";
 import { logger } from "@/utils/logger";
 import { z } from "zod";
 import { env } from "@/env";
@@ -13,9 +14,9 @@ const schemas = {
     bucketType: z.enum(["catalog"]),
     imageType: z.string().regex(/^(provider)$/),
     num: z.string().regex(/^[0-9]{1}$/),
-    imageId: z.string().regex(/^\d-\d{10}\.png$/),
+    imageId: z.string().regex(/^\d-[a-f0-9]{32}\.(png|jpeg|jpg|webp)$/i),
     fit: z.enum(["crop"]),
-    dimension: z.string().regex(/^[0-9]{2,3}$/),
+    dimension: z.string().regex(/^[0-9]{2,4}$/),
 };
 
 router.get(
@@ -81,16 +82,18 @@ router.get(
             const cacheKey = fullPath;
             const cachedImage = imageCache.get(cacheKey);
             if (cachedImage) {
-                const { buffer, contentType } = cachedImage as {
-                    buffer: Buffer;
-                    contentType: string;
-                };
+                const { buffer } = cachedImage as { buffer: Buffer };
+                const pngBuffer = await sharp(buffer)
+                    .resize(Number(validData.width), Number(validData.height))
+                    .png()
+                    .toBuffer();
+
                 res.status(200)
                     .set({
-                        "Content-Type": contentType,
+                        "Content-Type": "image/png",
                         "Cache-Control": "public, max-age=31536000, immutable",
                     })
-                    .send(buffer);
+                    .send(pngBuffer);
                 return;
             }
 
@@ -103,22 +106,25 @@ router.get(
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const buffer = await response.arrayBuffer();
-            const contentType =
-                response.headers.get("content-type") || "image/png";
+            const arrayBuffer = await response.arrayBuffer();
 
-            // Store in cache
+            // Convert image to PNG using Sharp with resize
+            const pngBuffer = await sharp(Buffer.from(arrayBuffer))
+                .resize(Number(validData.width), Number(validData.height))
+                .png()
+                .toBuffer();
+
+            // Store original PNG in cache
             imageCache.set(cacheKey, {
-                buffer: Buffer.from(buffer),
-                contentType,
+                buffer: pngBuffer,
             });
 
             res.status(200)
                 .set({
-                    "Content-Type": contentType,
+                    "Content-Type": "image/png",
                     "Cache-Control": "public, max-age=31536000, immutable",
                 })
-                .send(Buffer.from(buffer));
+                .send(pngBuffer);
             return;
         } catch (e: unknown) {
             logger.error(
