@@ -10,7 +10,7 @@ const imageCache = new NodeCache({ stdTTL: 3600 }); // 1 hr cache
 
 // Define all schemas in one place
 const schemas = {
-    type: z.enum(["catalog"]),
+    bucketType: z.enum(["catalog"]),
     imageType: z.string().regex(/^(provider)$/),
     num: z.string().regex(/^[0-9]{1}$/),
     imageId: z.string().regex(/^\d-\d{10}\.png$/),
@@ -19,14 +19,14 @@ const schemas = {
 };
 
 router.get(
-    "/:type/:imageType/:num/:num2/:imageId",
+    "/:bucketType/:imageType/:num/:num2/:imageId",
     async (req: Request, res: Response) => {
-        const { type, imageType, num, num2, imageId } = req.params;
+        const { bucketType, imageType, num, num2, imageId } = req.params;
         const { fit = "crop", height = "64", width = "64" } = req.query;
 
         // Combine all validations into a single schema for cleaner validation
         const validationSchema = z.object({
-            type: schemas.type,
+            bucketType: schemas.bucketType,
             imageType: schemas.imageType,
             num: schemas.num,
             num2: schemas.num,
@@ -38,7 +38,7 @@ router.get(
 
         // Use safeParse for all validations at once
         const validationResult = validationSchema.safeParse({
-            type,
+            bucketType,
             imageType,
             num,
             num2,
@@ -54,7 +54,7 @@ router.get(
             const errorMessage = `Invalid ${errorPath.charAt(0).toUpperCase() + errorPath.slice(1)}`;
 
             res.status(400).json({
-                endpoint: "/images/:type/:imageType/:num/:num2/:imageId",
+                endpoint: "/images/:bucketType/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 400,
@@ -73,7 +73,7 @@ router.get(
         };
 
         try {
-            const basePath = `/${validData.type}/${validData.imageType}/${validData.num}/${validData.num2}/${validData.imageId}`;
+            const basePath = `/${validData.bucketType}/${validData.imageType}/${validData.num}/${validData.num2}/${validData.imageId}`;
             const query = `?fit=${validData.fit}&height=${validData.height}&width=${validData.width}`;
             const fullPath = `${basePath}${query}`;
 
@@ -122,11 +122,11 @@ router.get(
             return;
         } catch (e: unknown) {
             logger.error(
-                `Error in /images/${type}/${imageType}/${num}/${num2}/${imageId}: ${e}`
+                `Error in /images/${bucketType}/${imageType}/${num}/${num2}/${imageId}: ${e}`
             );
 
             res.status(500).json({
-                endpoint: "/images/:type/:imageType/:num/:num2/:imageId",
+                endpoint: "/images/:bucketType/:imageType/:num/:num2/:imageId",
                 hasError: 1,
                 result: {
                     error: 500,
