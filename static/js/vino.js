@@ -7,9 +7,10 @@ function setLoadingScreenBG() {
         !vino.title_hasImage("vino_orange") &&
         !vino.title_hasImage("vino_pink")
     ) {
+        vino.runSingleButtonDialog("conditions met", "k");
         vino.title_clearImage();
         vino.title_setFixedImage(
-            tvii.clientUrl + "/img/title/blue.png",
+            window.location.origin + "/img/title/blue.png",
             "vino_blue",
             "",
             "",
@@ -17,7 +18,7 @@ function setLoadingScreenBG() {
             2
         );
         vino.title_setFixedImage(
-            tvii.clientUrl + "/img/title/orange.png",
+            window.location.origin + "/img/title/orange.png",
             "vino_orange",
             "",
             "",
@@ -25,13 +26,15 @@ function setLoadingScreenBG() {
             2
         );
         vino.title_setFixedImage(
-            tvii.clientUrl + "/img/title/pink.png",
+            window.location.origin + "/img/title/pink.png",
             "vino_pink",
             "",
             "",
             "",
             2
         );
+    } else {
+        vino.runSingleButtonDialog("faggot", "k");
     }
 }
 
@@ -46,6 +49,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Exit app");
             }
         });
+});
 
+window.addEventListener("load", function () {
     setLoadingScreenBG();
 });
