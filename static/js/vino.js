@@ -7,7 +7,6 @@ function setLoadingScreenBG() {
         !vino.title_hasImage("vino_orange") &&
         !vino.title_hasImage("vino_pink")
     ) {
-        vino.runSingleButtonDialog("conditions met", "k");
         vino.title_clearImage();
         vino.title_setFixedImage(
             window.location.origin + "/img/title/blue.png",
@@ -33,8 +32,6 @@ function setLoadingScreenBG() {
             "",
             2
         );
-    } else {
-        vino.runSingleButtonDialog("faggot", "k");
     }
 }
 
