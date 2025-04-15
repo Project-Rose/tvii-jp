@@ -1,4 +1,40 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 /* eslint-disable no-undef */
+function setLoadingScreenBG() {
+    if (
+        vino.title_getImageCount() >= 1 &&
+        !vino.title_hasImage("vino_blue") &&
+        !vino.title_hasImage("vino_orange") &&
+        !vino.title_hasImage("vino_pink")
+    ) {
+        vino.title_clearImage();
+        vino.title_setFixedImage(
+            tvii.clientUrl + "/img/title/blue.png",
+            "vino_blue",
+            "",
+            "",
+            "",
+            2
+        );
+        vino.title_setFixedImage(
+            tvii.clientUrl + "/img/title/orange.png",
+            "vino_orange",
+            "",
+            "",
+            "",
+            2
+        );
+        vino.title_setFixedImage(
+            tvii.clientUrl + "/img/title/pink.png",
+            "vino_pink",
+            "",
+            "",
+            "",
+            2
+        );
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     document
         .querySelector(".exit-button")
@@ -10,4 +46,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Exit app");
             }
         });
+
+    setLoadingScreenBG();
 });
