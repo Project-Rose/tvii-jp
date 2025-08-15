@@ -1,57 +1,148 @@
-import { env } from "@/env";
+import { parseServiceToken } from "@/utils/serviceToken";
 import { type Request, type Response, type NextFunction } from "express";
+import db from "@/utils/db";
+import { logger } from "@/utils/logger";
+import { env } from "@/env";
+import { join } from "path";
 
-const middleware = (req: Request, res: Response, next: NextFunction): void => {
-    if (env.VINO_JP_CONFIG_BLOCK_PC === "true") {
-        const userAgent = req.get("User-Agent");
+const environment = env.VINO_JP_CONFIG_ENV as "dev" | "stg" | "prod";
 
-        if (
-            userAgent !==
-            "Mozilla/5.0 (Nintendo WiiU) AppleWebKit/534.52 (KHTML, like Gecko) NX/2.1.0.10.9 vn/1.5.US"
-        ) {
-            res.status(403)
-                .contentType("text/plain")
-                .send(
-                    "Please use Project Rosé on a Nintendo Wii U system!\n\nFor support, join our Discord!\nhttps://discord.gg/AaTsXndGun"
-                );
-            return;
-        }
-
-        const requiredHeaders = [
-            "x-nintendo-principal-id-09",
-            "x-nintendo-principal-id-12",
-            "x-nintendo-principal-id-02",
-            "x-nintendo-principal-id-01",
-            "x-nintendo-principal-id-03",
-            "x-nintendo-principal-id-04",
-            "x-nintendo-country-code",
-            "x-nintendo-principal-id-08",
-            "x-nintendo-service-token",
-            "x-nintendo-principal-id-06",
-            "x-nintendo-returned-from-other",
-            "x-nintendo-white-list-get-count",
-            "x-nintendo-principal-id-07",
-            "x-nintendo-current-principal-id",
-            "x-nintendo-principal-id-10",
-            "x-nintendo-principal-id-11",
-            "x-nintendo-principal-id-05",
-            "x-nintendo-release-version",
-        ];
-
-        for (const header of requiredHeaders) {
-            if (!(header in req.headers)) {
-                res.status(403)
-                    .contentType("text/plain")
-                    .send(
-                        "Please use Project Rosé on a Nintendo Wii U system!\n\nFor support, join our Discord!\nhttps://discord.gg/AaTsXndGun"
-                    );
-                return;
-            }
-        }
-
+const middleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<any> => {
+    if (req.path.startsWith("/api/")) {
         return next();
+    }
+
+    const requiredHeaders = [
+        "x-nintendo-country-code",
+        "x-nintendo-service-token",
+        "x-nintendo-current-principal-id",
+    ];
+
+    for (const header of requiredHeaders) {
+        if (!req.headers[header]) {
+            logger.warn("Missing required header: %s", header);
+            return res
+                .status(400)
+                .sendFile(
+                    join(__dirname, "..", "..", "pages", "error", "pc_en.html")
+                );
+        }
+    }
+
+    const serviceToken = parseServiceToken(req);
+
+    if (
+        !serviceToken.pid ||
+        !serviceToken.serial_number ||
+        !serviceToken.access_key
+    ) {
+        logger.warn("Invalid service token: %j", serviceToken);
+        return res
+            .status(400)
+            .sendFile(
+                join(__dirname, "..", "..", "pages", "error", "pc_en.html")
+            );
+    }
+
+    if (
+        serviceToken.pid.toString().length !== 10 ||
+        (serviceToken.serial_number.length !== 11 &&
+            serviceToken.serial_number.length !== 12) ||
+        serviceToken.access_key.length !== 17
+    ) {
+        logger.warn("Invalid token format: %j", serviceToken);
+        return res
+            .status(400)
+            .sendFile(
+                join(__dirname, "..", "..", "pages", "error", "pc_en.html")
+            );
+    }
+
+    const pidFromHeader = parseInt(
+        String(req.headers["x-nintendo-current-principal-id"]),
+        16
+    ).toString();
+    const pidFromToken = serviceToken.pid.toString();
+
+    if (pidFromHeader !== pidFromToken) {
+        logger.warn(
+            "PID mismatch: header=%s, token=%s",
+            pidFromHeader,
+            pidFromToken
+        );
+        return res
+            .status(400)
+            .sendFile(
+                join(__dirname, "..", "..", "pages", "error", "pc_en.html")
+            );
+    }
+
+    const whitelistRow = await db("whitelist")
+        .where("pid", serviceToken.pid)
+        .andWhere("access_key", serviceToken.access_key)
+        .first();
+
+    const whitelistEnv = (whitelistRow?.env ?? "prod") as
+        | "dev"
+        | "stg"
+        | "prod";
+
+    const account = await db("account").where("pid", serviceToken.pid).first();
+
+    const accountEnv = account?.env ?? whitelistEnv;
+
+    const allowedEnvs: Record<"dev" | "stg" | "prod", string[]> = {
+        dev: ["dev", "stg", "prod"],
+        stg: ["stg", "prod"],
+        prod: ["prod"],
+    };
+
+    if (!whitelistEnv || !allowedEnvs[whitelistEnv].includes(environment)) {
+        logger.warn(
+            "User %s tried to access %s without whitelist permission",
+            serviceToken.pid,
+            environment
+        );
+        return res
+            .status(200)
+            .sendFile(
+                join(
+                    __dirname,
+                    "..",
+                    "..",
+                    "pages",
+                    "error",
+                    "unauthorized_en.html"
+                )
+            );
+    }
+
+    if (accountEnv !== environment) {
+        logger.warn(
+            "User %s is supposed to be in %s but tried to access %s",
+            serviceToken.pid,
+            accountEnv,
+            environment
+        );
+        return res
+            .status(200)
+            .sendFile(
+                join(
+                    __dirname,
+                    "..",
+                    "..",
+                    "pages",
+                    "error",
+                    "unauthorized_en.html"
+                )
+            );
     }
 
     return next();
 };
+
 export { middleware as access };

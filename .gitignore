@@ -129,5 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# json file i use for viewing the TV Guide API responses
-tvguide.json
+dockerfile.dev
+core
+src/config/
