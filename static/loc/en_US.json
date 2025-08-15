@@ -73,5 +73,7 @@
     "vino.home.tips.tip10": "Select the Tune In Live button to instantly tune in to the TV program that is currently focused!",
     "vino.home.tips.tip11": "Search for your favorite TV programs and actors on Menu>Search and type what you want to see, you can even select from suggestions on the keyboard!",
     "vino.home.tips.tip12": "Check the e-manual for Nintendo TVii on Menu>Electronic Manual and read every page to know more detailed information about every part of the app.",
-    "vino.home.bottom.text1": "The program being broadcast is displayed."
+    "vino.home.bottom.text1": "The program being broadcast is displayed.",
+    "vino.home.program.genre": "Genre:",
+    "vino.home.program.premiere": "Premiere Date:"
 }

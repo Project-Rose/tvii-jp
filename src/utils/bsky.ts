@@ -36,7 +36,7 @@ export class BskyClient {
     return session;
   }
 
-  async sendPost(text: string, date: string) {
+  async sendPost(text: string) {
     const rt = new RichText({ text });
     await rt.detectFacets(this.agent);
 
@@ -44,7 +44,34 @@ export class BskyClient {
       $type: 'app.bsky.feed.post',
       text: rt.text,
       facets: rt.facets,
-      createdAt: date,
+      createdAt: new Date().toISOString(),
+    };
+
+    await this.agent.post(postRecord);
+  }
+
+  async sendPostWithImage(text: string, altDescription: string, imageBuffer: Buffer) {
+    const rt = new RichText({ text });
+    await rt.detectFacets(this.agent);
+
+    const blob = await this.agent.uploadBlob(imageBuffer, {
+      encoding: 'image/png',
+    });
+
+    const postRecord: FeedPostRecord = {
+      $type: 'app.bsky.feed.post',
+      text: rt.text,
+      facets: rt.facets,
+      createdAt: new Date().toISOString(),
+      embed: {
+        $type: 'app.bsky.embed.images',
+        images: [
+          {
+            alt: altDescription,
+            image: blob.data.blob
+          }
+        ]
+      }
     };
 
     await this.agent.post(postRecord);
