@@ -131,3 +131,4 @@ dist
 
 dockerfile.dev
 core
+src/config/

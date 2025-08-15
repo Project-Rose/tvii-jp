@@ -1,4 +1,4 @@
-import { vino } from "@/routes/ui/vino-jp";
+import { vinoRoute as vino } from "@/routes/ui/vino-jp";
 import { vinoDebug } from "@/routes/ui/debug";
 import { providers } from "@/routes/api/providers";
 import { programs } from "@/routes/api/programs";
@@ -56,11 +56,11 @@ const routes: Routes[] = [
         path: "/api/v1/act",
         route: account,
     },
-        {
+    {
         name: "Vino Miiverse Forwarder (JP)",
         path: "/api/v1/olvapi",
         route: miiverse,
-    }
+    },
 ];
 
 export { routes as exports };
