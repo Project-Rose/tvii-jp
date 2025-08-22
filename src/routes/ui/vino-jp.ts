@@ -9,13 +9,19 @@ const router: Router = express.Router();
 router.get("/", async (_req: Request, res: Response): Promise<any> => {
     const token = parseServiceToken(_req);
 
-    const account = await db('account')
-        .where({ pid: token.pid, serial_number: token.serial_number, access_key: token.access_key })
+    const account = await db("account")
+        .where({
+            pid: token.pid,
+            serial_number: token.serial_number,
+            access_key: token.access_key,
+        })
         .first();
 
     //Vino client detects if the checkLogIn is false anyway to effectuate setup
     if (!account) {
-        return res.sendFile(join(__dirname, "..", "..", "..", "pages", "setup.html"));
+        return res.sendFile(
+            join(__dirname, "..", "..", "..", "pages", "setup.html")
+        );
     }
 
     try {
@@ -25,6 +31,5 @@ router.get("/", async (_req: Request, res: Response): Promise<any> => {
         res.sendFile(join(__dirname, "..", "..", "..", "pages", "error.html"));
     }
 });
-
 
 export { router as vinoRoute };

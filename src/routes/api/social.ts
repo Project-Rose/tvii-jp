@@ -674,16 +674,17 @@ router.post(
                     if (bskyAgent && resumedSession) {
                         try {
                             const bskyResult = await bskyAgent.sendPost(bText);
-                            console.log("bsky text upload! ", bskyResult)
+                            console.log("bsky text upload! ", bskyResult);
                         } catch (e) {
-                            console.log("bsky text upload error: ", e)
+                            console.log("bsky text upload error: ", e);
                         }
                     }
                     //Twitter
                     if (userClient) {
                         try {
-                            const tweetResult = await userClient.v2.tweet(xText);
-                            console.log("twitter text upload! ", tweetResult)
+                            const tweetResult =
+                                await userClient.v2.tweet(xText);
+                            console.log("twitter text upload! ", tweetResult);
                         } catch (e) {
                             console.log("twitter text upload error: ", e);
                         }
@@ -704,14 +705,16 @@ router.post(
 
                     if (bskyAgent && resumedSession) {
                         try {
-                            const bskyResult = await bskyAgent.sendPostWithImage(
-                                bText,
-                                "User drawing from Nintendo TVii while watching " + postForm.topic_tag,
-                                paintingBuffer
-                            );
-                            console.log("bsky memo upload! ", bskyResult)
+                            const bskyResult =
+                                await bskyAgent.sendPostWithImage(
+                                    bText,
+                                    "User drawing from Nintendo TVii while watching " +
+                                        postForm.topic_tag,
+                                    paintingBuffer
+                                );
+                            console.log("bsky memo upload! ", bskyResult);
                         } catch (e) {
-                            console.log("bsky memo upload error: ", e)
+                            console.log("bsky memo upload error: ", e);
                         }
                     }
                     if (userClient) {
@@ -724,7 +727,7 @@ router.post(
                                 text: xText,
                                 media: { media_ids: [mediaId] },
                             });
-                            console.log("twitter memo upload! ", tweetResult)
+                            console.log("twitter memo upload! ", tweetResult);
                         } catch (e) {
                             console.log("twitter memo upload error: ", e);
                         }
@@ -947,7 +950,9 @@ router.delete(
                 res.status(500).json({ status: "empathy does not exist" });
             }
 
-            await db("empathies").where({ user_id: account.user_id, post_id: postId }).del();
+            await db("empathies")
+                .where({ user_id: account.user_id, post_id: postId })
+                .del();
 
             res.status(200).json({ status: "success" });
         } catch (e) {

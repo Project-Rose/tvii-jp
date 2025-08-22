@@ -1,109 +1,151 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <title>Nintendo TVii</title>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+        <link href="/css/vino.css" rel="stylesheet" />
+        <script>
+            function handleScriptError(scriptName) {
+                alert("Failed to load script:" + scriptName);
+            }
+            if (!window.vino) {
+                document.write('<script src="/js/vino_emu.js"><\/script>');
+            }
+        </script>
+        <script
+            src="/js/base64.min.js"
+            onerror="handleScriptError('base64.min.js')"
+        ></script>
+        <script
+            src="/js/jquery-3.7.1.min.js"
+            onerror="handleScriptError('jquery-3.7.1.min.js')"
+        ></script>
+        <script
+            src="/js/vino.js"
+            onerror="handleScriptError('vino.js')"
+        ></script>
+    </head>
 
-<head>
-    <title>Nintendo TVii</title>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-    <link href="/css/vino.css" rel="stylesheet">
-    <script>
-        function handleScriptError(scriptName) {
-            alert("Failed to load script:" + scriptName);
-        }
-        if (!window.vino) {
-            document.write('<script src="/js/vino_emu.js"><\/script>');
-        }
-    </script>
-    <script src="/js/base64.min.js" onerror="handleScriptError('base64.min.js')"></script>
-    <script src="/js/jquery-3.7.1.min.js" onerror="handleScriptError('jquery-3.7.1.min.js')"></script>
-    <script src="/js/vino.js" onerror="handleScriptError('vino.js')"></script>
+    <body>
+        <!--preload some important assets -->
+        <img style="display: none" src="/img/exit2.png" width="0" height="0" />
+        <img style="display: none" src="/img/menu2.png" width="0" height="0" />
+        <img
+            style="display: none"
+            src="/img/remoteb2.png"
+            width="0"
+            height="0"
+        />
 
-</head>
+        <div class="wrapper">
+            <button
+                style="display: none"
+                class="title-program-up hidden-e hidden-&"
+            ></button>
+            <button
+                style="display: none"
+                class="title-program-down hidden-d hidden-("
+            ></button>
+            <button
+                style="display: none"
+                class="title-program-confirm hidden-a"
+            ></button>
 
-<body>
-    <!--preload some important assets -->
-    <img style="display: none;" src="/img/exit2.png" width="0" height="0">
-    <img style="display: none;" src="/img/menu2.png" width="0" height="0">
-    <img style="display: none;" src="/img/remoteb2.png" width="0" height="0">
-
-    <div class="wrapper">
-        <button style="display: none;" class="title-program-up hidden-e hidden-&"></button>
-        <button style="display: none;" class="title-program-down hidden-d hidden-("></button>
-        <button style="display: none;" class="title-program-confirm hidden-a"></button>
-
-        <div class="top">
-            <div class="header">
-                <a href="javascript:void(0)" class="exit"></a>
-                <a href="javascript:void(0)" class="menu" data-loc="vino.home.header.menu"
-                    onclick="location.reload()"></a>
-                <div class="tabs">
-                    <a href="javascript:void(0)" data-loc="vino.home.header.live" class="selected"></a>
-                    <a href="javascript:void(0)" data-loc="vino.home.header.guide"></a>
-                    <a href="javascript:void(0)" data-loc="vino.home.header.rec"></a>
+            <div class="top">
+                <div class="header">
+                    <a href="javascript:void(0)" class="exit"></a>
+                    <a
+                        href="javascript:void(0)"
+                        class="menu"
+                        data-loc="vino.home.header.menu"
+                        onclick="location.reload()"
+                    ></a>
+                    <div class="tabs">
+                        <a
+                            href="javascript:void(0)"
+                            data-loc="vino.home.header.live"
+                            class="selected"
+                        ></a>
+                        <a
+                            href="javascript:void(0)"
+                            data-loc="vino.home.header.guide"
+                        ></a>
+                        <a
+                            href="javascript:void(0)"
+                            data-loc="vino.home.header.rec"
+                        ></a>
+                    </div>
                 </div>
-            </div>
 
-            <div class="header pr-details" style="display: none;">
-                <a href="javascript:void(0)" class="return-top"></a>
-                <a href="javascript:void(0)" class="favorite"></a>
-                <span></span>
-            </div>
-
-            <div class="header miiverse" style="display: none;">
-                <a href="javascript:void(0)" class="help"></a>
-                <span></span>
-            </div>
-
-            <div class="spacing" style="height: 70px; display: block;"></div>
-        </div>
-
-        <div class="program-central">
-        </div>
-
-        <div class="program-fulldetails-page" style="display: none;">
-        </div>
-
-        <div class="miiverse-modal l-stick-scroll" style="display: none;">
-        </div>
-
-        <div class="miiverse-post-modal popup" style="display: none;">
-        </div>
-
-        <div class="trailer-modal popup" style="display: none;">
-            <div class="video">
-                <video preload="auto" playsinline controls width="480" height="320"
-                    src="/img/noimg.png"></video>
-            </div>
-            <p></p>
-            <a href="javascript:void(0)" class="back-modal accesskey-b"></a>
-        </div>
-
-        <div class="footer">
-            <div class="spacing" style="height: 90px; display: block;"></div>
-            <div class="bottom">
-                <a href="javascript:void(0)" class="back accesskey-b"></a>
-                <a href="javascript:void(0)" class="tune-in accesskey-x"></a>
-                <div class="miiverse-preview" style="display: none;">
-                    <img src="/img/noimg.png">
+                <div class="header pr-details" style="display: none">
+                    <a href="javascript:void(0)" class="return-top"></a>
+                    <a href="javascript:void(0)" class="favorite"></a>
                     <span></span>
-                    <a href="javascript:void(0)" class="miiverse-button">
-                    </a>
                 </div>
-                <span class="miiverse-text">
-                   Posts are crossposted between Miiverse/linked social media. Yeahs are not crossposted.
-                </span>
-                <a href="javascript:void(0)" class="miiverse-post disabled">
-                    <span>Post</span>
-                </a>
-                <div class="clock">
-                    <span class="date"></span>
-                    <span class="day"></span>
-                    <span class="sep"></span>
-                    <span class="hour">00<span>:</span>00</span>
+
+                <div class="header miiverse" style="display: none">
+                    <a href="javascript:void(0)" class="help"></a>
+                    <span></span>
+                </div>
+
+                <div class="spacing" style="height: 70px; display: block"></div>
+            </div>
+
+            <div class="program-central"></div>
+
+            <div class="program-fulldetails-page" style="display: none"></div>
+
+            <div
+                class="miiverse-modal l-stick-scroll"
+                style="display: none"
+            ></div>
+
+            <div class="miiverse-post-modal popup" style="display: none"></div>
+
+            <div class="trailer-modal popup" style="display: none">
+                <div class="video">
+                    <video
+                        preload="auto"
+                        playsinline
+                        controls
+                        width="480"
+                        height="320"
+                        src="/img/noimg.png"
+                    ></video>
+                </div>
+                <p></p>
+                <a href="javascript:void(0)" class="back-modal accesskey-b"></a>
+            </div>
+
+            <div class="footer">
+                <div class="spacing" style="height: 90px; display: block"></div>
+                <div class="bottom">
+                    <a href="javascript:void(0)" class="back accesskey-b"></a>
+                    <a
+                        href="javascript:void(0)"
+                        class="tune-in accesskey-x"
+                    ></a>
+                    <div class="miiverse-preview" style="display: none">
+                        <img src="/img/noimg.png" />
+                        <span></span>
+                        <a href="javascript:void(0)" class="miiverse-button">
+                        </a>
+                    </div>
+                    <span class="miiverse-text">
+                        Posts are crossposted between Miiverse/linked social
+                        media. Yeahs are not crossposted.
+                    </span>
+                    <a href="javascript:void(0)" class="miiverse-post disabled">
+                        <span>Post</span>
+                    </a>
+                    <div class="clock">
+                        <span class="date"></span>
+                        <span class="day"></span>
+                        <span class="sep"></span>
+                        <span class="hour">00<span>:</span>00</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-</body>
-
+    </body>
 </html>

@@ -10,23 +10,23 @@ import { env } from "@/env";
 import crypto from "crypto";
 
 // Key must be 32 bytes for AES-256
-const AES_KEY = Buffer.from(env.VINO_JP_CONFIG_BSKY_AES_KEY, 'base64');
+const AES_KEY = Buffer.from(env.VINO_JP_CONFIG_BSKY_AES_KEY, "base64");
 
 function encrypt(text: string) {
     const iv = crypto.randomBytes(16); // new IV every time
-    const cipher = crypto.createCipheriv('aes-256-cbc', AES_KEY, iv);
-    let encrypted = cipher.update(text, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
+    const cipher = crypto.createCipheriv("aes-256-cbc", AES_KEY, iv);
+    let encrypted = cipher.update(text, "utf8", "base64");
+    encrypted += cipher.final("base64");
     // Store IV along with ciphertext
-    return iv.toString('base64') + ':' + encrypted;
+    return iv.toString("base64") + ":" + encrypted;
 }
 
 function decrypt(data: string) {
-    const [ivBase64, encryptedData] = data.split(':');
-    const iv = Buffer.from(ivBase64, 'base64');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', AES_KEY, iv);
-    let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
+    const [ivBase64, encryptedData] = data.split(":");
+    const iv = Buffer.from(ivBase64, "base64");
+    const decipher = crypto.createDecipheriv("aes-256-cbc", AES_KEY, iv);
+    let decrypted = decipher.update(encryptedData, "base64", "utf8");
+    decrypted += decipher.final("utf8");
     return decrypted;
 }
 
@@ -159,10 +159,17 @@ router.post(
             //Used for creating the session, will be stored in DB to refresh token.
             let hashedBskyPass = null;
             let hashedBskySess = null;
-            let bskyUsername = data.bskyUsernameTemp ? data.bskyUsernameTemp : null;
+            let bskyUsername = data.bskyUsernameTemp
+                ? data.bskyUsernameTemp
+                : null;
             let bskySession = null;
             //If user did log in to Bluesky
-            if (data.bskyUsernameTemp && data.bskyPasswordTemp && data.bskyUsernameTemp.length && data.bskyPasswordTemp.length) {
+            if (
+                data.bskyUsernameTemp &&
+                data.bskyPasswordTemp &&
+                data.bskyUsernameTemp.length &&
+                data.bskyPasswordTemp.length
+            ) {
                 let bsky = new BskyClient();
 
                 bskySession = await bsky.login(
@@ -461,12 +468,10 @@ router.post(
                 .first();
 
             if (!userSettings) {
-                return res
-                    .status(400)
-                    .json({
-                        status: "error",
-                        error: "Could not get user settings.",
-                    });
+                return res.status(400).json({
+                    status: "error",
+                    error: "Could not get user settings.",
+                });
             }
 
             res.status(200).json({
