@@ -1,0 +1,69 @@
+<div class="dialog-container">
+    <div class="popup-header"></div>
+    <div class="post-menu">
+        <div class="mii">
+            <img src="/img/noimg.png">
+        </div>
+
+        <ul class="feeling-buttons">
+            <li class="checked">
+                <input type="radio" name="feeling_id" value="0" class="feeling-button-normal" checked="">
+            </li>
+            <li>
+                <input type="radio" name="feeling_id" value="1" class="feeling-button-happy">
+            </li>
+            <li>
+                <input type="radio" name="feeling_id" value="2" class="feeling-button-like">
+            </li>
+            <li>
+                <input type="radio" name="feeling_id" value="3" class="feeling-button-surprised">
+            </li>
+            <li>
+                <input type="radio" name="feeling_id" value="4" class="feeling-button-frustrated">
+            </li>
+            <li>
+                <input type="radio" name="feeling_id" value="5" class="feeling-button-puzzled">
+            </li>
+        </ul>
+
+        <label class="spoiler-button">
+            Mark as Spoiler
+            <input type="checkbox" name="is_spoiler" value="1">
+        </label>
+
+        <div class="textarea-container textarea-with-menu">
+            <menu class="textarea-menu">
+                <li>
+                    <label id="text" class="textarea-menu-text checked">
+                        <input autocomplete="off" tabindex="1" type="radio" name="_post_type" value="body" checked>
+                    </label>
+                </li>
+
+                <li class="test-painting-tab">
+                    <label id="memo" class="textarea-menu-memo">
+                        <input autocomplete="off" tabindex="1" type="radio" name="_post_type" value="painting">
+                    </label>
+                </li>
+            </menu>
+
+            <div class="textarea-text">
+                <textarea wrap="soft" autocomplete="off" type="text" name="body" class="textarea-text-input" value=""
+                    maxlength="200" placeholder="Write something here..."></textarea>
+
+                <div class="textarea-text-preview placeholder" data-placeholder="Write something here...">
+                </div>
+            </div>
+
+            <div class="textarea-memo" style="display: none;">
+                <div class="textarea-memo-preview" style="background-image: url(/img/noimg.png)">
+                </div>
+                <input autocomplete="off" type="hidden" class="textarea-memo-value" name="painting" disabled>
+            </div>
+        </div>
+
+    </div>
+    <div class="dialog-buttons">
+        <a href="javascript:void(0)" tabindex="0" class="btn-1 accesskey-b">Cancel</a>
+        <a href="javascript:void(0)" class="btn-2">Post</a>
+    </div>
+</div>

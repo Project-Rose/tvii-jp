@@ -47,7 +47,7 @@ export class BskyClient {
       createdAt: new Date().toISOString(),
     };
 
-    await this.agent.post(postRecord);
+    return await this.agent.post(postRecord);
   }
 
   async sendPostWithImage(text: string, altDescription: string, imageBuffer: Buffer) {
@@ -74,6 +74,6 @@ export class BskyClient {
       }
     };
 
-    await this.agent.post(postRecord);
+    return await this.agent.post(postRecord);
   }
 }

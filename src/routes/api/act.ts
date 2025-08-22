@@ -105,7 +105,7 @@ router.post(
             }
 
             const checkPID = await fetch(
-                `https://mii-unsecure.ariankordi.net/mii_data/?pid=${headerPid}&api_id=1`
+                `https://mii-unsecure.ariankordi.net/mii_data/?pid=${headerPid}&api_id=1&force_refresh=1`
             );
             if (!checkPID.ok) {
                 console.warn(
@@ -157,26 +157,27 @@ router.post(
             const xUserId = data.xUserId === "" ? null : data.xUserId;
 
             //Used for creating the session, will be stored in DB to refresh token.
-            const bskyUsernameTemp = data.bskyUsernameTemp;
-            const bskyPasswordTemp = data.bskyPasswordTemp;
-
-            let bskySession;
+            let hashedBskyPass = null;
+            let hashedBskySess = null;
+            let bskyUsername = data.bskyUsernameTemp ? data.bskyUsernameTemp : null;
+            let bskySession = null;
             //If user did log in to Bluesky
-            if (bskyUsernameTemp.length >= 1 && bskyPasswordTemp.length >= 1) {
+            if (data.bskyUsernameTemp && data.bskyPasswordTemp && data.bskyUsernameTemp.length && data.bskyPasswordTemp.length) {
                 let bsky = new BskyClient();
 
                 bskySession = await bsky.login(
-                    bskyUsernameTemp,
-                    bskyPasswordTemp
+                    data.bskyUsernameTemp,
+                    data.bskyPasswordTemp
                 );
 
                 if (!bskySession) {
                     console.warn(
-                        `Error fetching BlueSky data for: ${token.pid} ${token.serial_number} ${bskySession}`
+                        `Error fetching bsky login for: ${token.pid} ${token.serial_number} ${bskySession}`
                     );
                 }
-            } else {
-                bskySession = null;
+
+                hashedBskyPass = encrypt(data.bskyPasswordTemp);
+                hashedBskySess = encrypt(JSON.stringify(bskySession));
             }
 
             const tvProviderIdChosen = data.tv_provider_id;
@@ -273,9 +274,6 @@ router.post(
 
             console.log("Insert successful. New user ID:", userId);
 
-            let hashedBskyPass = encrypt(bskyPasswordTemp);
-            let hashedBskySess = encrypt(JSON.stringify(bskySession));
-
             const createdSettings = await db("settings").insert({
                 user_id: userId,
                 tv_provider_id: tvProviderIdChosen,
@@ -284,7 +282,7 @@ router.post(
                 x_user_id: xUserId,
                 bsky_auth_session_json: hashedBskySess,
                 bsky_password_hashed: hashedBskyPass,
-                bsky_username: bskyUsernameTemp,
+                bsky_username: bskyUsername,
             });
 
             if (
@@ -378,7 +376,7 @@ router.post(
             const oneHour = 60 * 60 * 1000;
             if (now.getTime() - lastUpdate.getTime() > oneHour) {
                 const updateMiiData = await fetch(
-                    `https://mii-unsecure.ariankordi.net/mii_data/?pid=${token.pid}&api_id=1`
+                    `https://mii-unsecure.ariankordi.net/mii_data/?pid=${token.pid}&api_id=1&force_refresh=1`
                 );
 
                 if (!updateMiiData.ok) {

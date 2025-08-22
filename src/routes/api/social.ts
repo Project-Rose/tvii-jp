@@ -874,6 +874,15 @@ router.post(
                 return res.status(401).json({ status: "no_account_yet" });
             }
 
+            const existing = await db("empathies")
+                .where({ user_id: account.user_id, post_id: postId })
+                .first();
+
+            if (existing) {
+                //what the miiverse yeah endpoint does anyway
+                res.status(200).json({ status: "success" });
+            }
+
             await db("empathies").insert({
                 user_id: account.user_id,
                 post_id: postId,
@@ -883,6 +892,66 @@ router.post(
             res.status(200).json({ status: "success" });
         } catch (e) {
             console.error("error yeah-ing post");
+            res.status(500).json({ status: "error" });
+        }
+    }
+);
+
+router.delete(
+    "/postsAlt/:postId/empathies",
+    async (req: Request, res: Response): Promise<any> => {
+        try {
+            const token = parseServiceToken(req);
+
+            if (
+                !token ||
+                !token.access_key ||
+                !token.serial_number ||
+                !token.pid
+            ) {
+                console.warn(
+                    `/postAlt/${req.params["postId"]}/empathies Access Key/Serial Number/PID doesn't exist for: ${token.pid} ${token.serial_number}`
+                );
+                return res.status(400).json({
+                    status: "error",
+                    error: "Header Serial Number or PID are undefined",
+                });
+            }
+
+            const postId = Number(req.params["postId"]);
+
+            const post = await db("posts").where({ post_id: postId }).first();
+
+            if (!post) {
+                return res.status(404).json({ error: "Post not found." });
+            }
+
+            const account = await db("account")
+                .where({
+                    pid: token.pid,
+                    serial_number: token.serial_number,
+                    access_key: token.access_key,
+                })
+                .first();
+
+            if (!account) {
+                return res.status(401).json({ status: "no_account_yet" });
+            }
+
+            const existing = await db("empathies")
+                .where({ user_id: account.user_id, post_id: postId })
+                .first();
+
+            if (!existing) {
+                // is this the right error code?
+                res.status(500).json({ status: "empathy does not exist" });
+            }
+
+            await db("empathies").where({ user_id: account.user_id, post_id: postId }).del();
+
+            res.status(200).json({ status: "success" });
+        } catch (e) {
+            console.error("error un-yeah-ing post");
             res.status(500).json({ status: "error" });
         }
     }

@@ -37,6 +37,53 @@ var tvii = {
         STARRATING5: 131072
     },
     templates: {
+        templateList: [
+            {
+                template_query: "prg_central",
+                template_file: "prg_central.html"
+            },
+            {
+                template_query: "prg_fulldetails",
+                template_file: "prg_fulldetails.html"
+            },
+            {
+                template_query: "miiverse_post_modal",
+                template_file: "miiverse_post_modal.html"
+            },
+        ],
+        requestAll: function () {
+            var templateLoadCount = 0;
+
+            for (var i = 0; i < tvii.templates.templateList.length; i++) {
+                (function (temToLoad) {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open("GET", tvii.clientUrl + "/pages/" + temToLoad.template_file);
+                    xhr.onreadystatechange = function () {
+                        if (xhr.readyState == 4) {
+                            if (xhr.status == 200) {
+                                var tem = {
+                                    template_name: temToLoad.template_query,
+                                    template_html: xhr.responseText
+                                }
+
+                                sessionStorage.setItem("template_" + tem.template_name, JSON.stringify(tem))
+
+                                templateLoadCount++;
+                                if (templateLoadCount >= tvii.templates.templateList.length) {
+                                    $(document).trigger("vino:templateload");
+                                }
+                            }
+                        }
+                    };
+                    xhr.send();
+                })(tvii.templates.templateList[i]);
+            }
+
+        },
+        get: function (templateName) {
+            var getHTML = JSON.parse(sessionStorage.getItem("template_" + templateName)).template_html;
+            return getHTML.trim();
+        },
         requestJSONLoc: function () {
             var locFile = tvii.getLang().split('-')[0] + "_" + tvii.getRegion() + ".json";
 
@@ -201,54 +248,61 @@ var tvii = {
 
             tvii.currentPostXhr.send(postForm);
         },
+        addEmpathyToPost: function (remove, id, onEmpathyFinish) {
+            tvii.posts.abortApiRequest();
+
+            tvii.currentPostXhr = new XMLHttpRequest();
+            var url = tvii.clientUrl + "/api/v1/socials/postsAlt/" + id + "/empathies";
+            var method = remove ? "DELETE" : "POST";
+            tvii.currentPostXhr.open(method, url, true);
+
+            tvii.currentPostXhr.onload = function () {
+                onEmpathyFinish(tvii.currentPostXhr.status === 200, tvii.currentPostXhr.responseText);
+                tvii.currentPostXhr = null;
+            };
+
+            tvii.currentPostXhr.send();
+        },
     },
     getLoc: function () {
         return tvii.templates.getLoc.apply(this.templates, arguments);
     },
-setClassHoverToEls: function (els) {
-    els.each(function () {
-        if (!$.data(this, "hoverLSTNR")) {
-            var $el = $(this);
-            var isHoverActive = false;
+    setClassHoverToEls: function (els) {
+        els.each(function () {
+            if (!$.data(this, "hoverLSTNR")) {
+                var $el = $(this);
+                var isHoverActive = false;
 
-            // Hover activate on first entry
-            $el.on("mouseenter", function () {
-                if (!isHoverActive) {
-                    $(this).addClass("hover");
-                    isHoverActive = true;
-                }
-            });
+                // Activate hover only on mousedown
+                $el.on("mousedown", function () {
+                    vino.soundPlayVolume('SE_COMMON_TOUCH_ON', 30);
+                    if (!isHoverActive) {
+                        $(this).addClass("hover");
+                        isHoverActive = true;
+                    }
+                });
 
-            // Play touch-on sound and ensure hover on mousedown
-            $el.on("mousedown", function () {
-                vino.soundPlayVolume('SE_COMMON_TOUCH_ON', 30);
-                if (!isHoverActive) {
-                    $(this).addClass("hover");
-                    isHoverActive = true;
-                }
-            });
+                // Remove hover & play cancel sound on full leave
+                $el.on("mouseleave", function () {
+                    if (isHoverActive) {
+                        $(this).removeClass("hover");
+                        vino.soundPlayVolume('SE_COMMON_TOUCH_CANCEL', 30);
+                        isHoverActive = false;
+                    }
+                });
 
-            // Remove hover & play cancel sound on full leave
-            $el.on("mouseleave", function () {
-                if (isHoverActive) {
-                    $(this).removeClass("hover");
-                    vino.soundPlayVolume('SE_COMMON_TOUCH_CANCEL', 30);
-                    isHoverActive = false;
-                }
-            });
+                // Remove hover without playing cancel sound on mouseup
+                $el.on("mouseup", function () {
+                    if (isHoverActive) {
+                        $(this).removeClass("hover");
+                        isHoverActive = false;
+                    }
+                });
 
-            // Remove hover without playing cancel sound on mouseup
-            $el.on("mouseup", function () {
-                if (isHoverActive) {
-                    $(this).removeClass("hover");
-                    isHoverActive = false;
-                }
-            });
-
-            $.data(this, "hoverLSTNR", true);
-        }
-    });
-},
+                $.data(this, "hoverLSTNR", true);
+            }
+        });
+    },
     setActualClickListener: function ($elements, onRealClick) {
         var dragThreshold = 5;
 
@@ -322,6 +376,7 @@ setClassHoverToEls: function (els) {
             case "FR":
             case "DE":
             case "IT":
+            case "SK":
             case "ES":
             case "GB":
             case "PT":
@@ -448,6 +503,33 @@ setClassHoverToEls: function (els) {
             return str.replace(/([!"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g, "\\$1");
         }
 
+        window.addEventListener("focus", function (e) {
+            var el = e.target;
+            if (!el || !vino.navi_getRect()) return;
+
+            // Bounding rects
+            var parent = $('.l-stick-scroll:visible').first().get(0);
+            if (!parent) return;
+            var parentRect = parent.getBoundingClientRect();
+            if (!parentRect) return;
+            var elRect = el.getBoundingClientRect();
+            if (!elRect) return;
+
+            // Adjust vertical scroll
+            if (elRect.top < parentRect.top) {
+                parent.scrollTop -= (parentRect.top - elRect.top);
+            } else if (elRect.bottom > parentRect.bottom) {
+                parent.scrollTop += (elRect.bottom - parentRect.bottom);
+            }
+
+            // Adjust horizontal scroll
+            if (elRect.left < parentRect.left) {
+                parent.scrollLeft -= (parentRect.left - elRect.left);
+            } else if (elRect.right > parentRect.right) {
+                parent.scrollLeft += (elRect.right - parentRect.right);
+            }
+        }, true);
+
         var inputCheck = setInterval(function () {
             wiiu.gamepad.update();
             var c = $('.l-stick-scroll:visible').first();
@@ -470,7 +552,6 @@ setClassHoverToEls: function (els) {
             }
         }, 16); // ~60fps
 
-
         document.onkeydown = function (evt) {
             var kc;
             if (evt) {
@@ -480,42 +561,16 @@ setClassHoverToEls: function (els) {
             }
 
             switch (kc) {
-                case 37:
-                case 39:
-                case 38:
-                case 40:
-                    var rect = vino.navi_getRect();
-                    if (rect) {
-                        var parts = rect.split(',').map(function (v) {
-                            return parseFloat(v.trim());
-                        });
-
-                        if (parts.length === 4) {
-                            var top = parts[1];
-                            var height = parts[3];
-
-                            var c = $('.l-stick-scroll:visible').first().get(0);
-                            const GP_HEIGHT = 480;
-
-                            if (c) {
-                                if ((top > GP_HEIGHT || top < 0) && (kc === 38 || kc === 40)) {
-                                    c.scrollTop = c.scrollTop + top;
-                                } else if ((top === 0 && c.scrollTop < GP_HEIGHT) && (kc === 38 || kc === 40)) {
-                                    c.scrollTop = 0;
-                                }
-                            }
-                        }
-                    }
-
-                    break;
                 case 36:
                     //HBM
                     break;
                 default:
                     break;
             }
+
             var chr = String.fromCharCode(kc).toLowerCase();
             var safeChr = escapeForClassSelector(chr);
+            if (!safeChr) return;
             var els = $(".accesskey-" + safeChr + ":visible, .hidden-" + safeChr);
 
             if (els.length) {
@@ -848,6 +903,8 @@ setClassHoverToEls: function (els) {
         }
 
         vino.loading_setIconRect(360, 160, 120, 120);
+        vino.video_enableOnTV(true);
+        vino.navi_setBaseVisibilityOnKeyEvent(true);
 
         const statuses = {
             SERVER_UNAVAILABLE: 1,
@@ -856,7 +913,12 @@ setClassHoverToEls: function (els) {
         }
 
         $(document).on("vino:jsonlocload", function () {
-            $(document).off("vino:loaded");
+            tvii.templates.requestAll();
+        });
+
+        $(document).on("vino:templateload", function () {
+            $(document).off("vino:jsonlocload");
+            $(document).off("vino:templateload");
             tvii.setButtonActions();
             initLoginCheck();
 
@@ -1446,6 +1508,8 @@ function initVinoSetup() {
 
 function initVinoHome() {
     tvii.pushStateWithQuery("page", "home", false);
+    $(".miiverse-post-modal").html(tvii.templates.get("miiverse_post_modal"))
+    $(".program-fulldetails-page").html(tvii.templates.get("prg_fulldetails"))
     tvii.templates.setUpLocHTML();
 
     window.addEventListener("popstate", function (e) {
@@ -1463,14 +1527,13 @@ function initVinoHome() {
         }
     });
 
-    if (tvii.getQuery("scene", true)) {
+    /*if (tvii.getQuery("scene", true)) {
         tvii.pushStateWithQuery("scene", "livetab", false);
     } else {
         tvii.pushStateWithQuery("scene", "livetab", false);
-    }
+    }*/
 
     setupClock();
-    tvii.setUpPageTip();
     tvii.setClassHoverToEls($(".exit, .menu, .back, .tune-in, .prev-page, .next-page, .miiverse-button, .miiverse-post"));
 
     $(".header .exit").on("click", function (e) {
@@ -1486,7 +1549,7 @@ function initVinoHome() {
         vino.exit();
     })
 
-    $(".back").on("click", function (e) {
+    $(".footer .back").on("click", function (e) {
         if (isHeaderButtonBlocked) return;
         if (e.originalEvent) {
             if (!vino.navi_getRect()) {
@@ -1565,9 +1628,26 @@ function initVinoHome() {
 
     $(".header .tabs>a").on("click", function () {
         if (isHeaderButtonBlocked) return;
+        if ($(this).hasClass("selected")) return;
+        vino.lyt_startTouchEffect();
+        vino.soundPlayVolume("SE_TAB_SELECT", 30);
+
         $(".header .tabs>a").removeClass("selected");
+        switch ($(this).index()) {
+            case 0: // first child
+                initLiveTab();
+                break;
+            case 1: // second child
+                initGuideTab();
+                break;
+            case 2: // third child
+                initRecommendedTab();
+                break;
+        }
         $(this).addClass("selected");
-    })
+
+    });
+
 
     var requested = false;
     var lastRequestedHeight = 0;
@@ -1703,31 +1783,30 @@ function initVinoHome() {
             });
         }
 
-        if (!window.snapToClosestProgram) {
-            window.snapToClosestProgram = function (triggerCallback) {
-                var programs = container.querySelectorAll(".program");
-                var len = programs.length;
-                if (!len) return;
+        window.snapToClosestProgram = function (triggerCallback) {
+            var programs = container.querySelectorAll(".program");
+            var len = programs.length;
+            if (!len) return;
 
-                var containerRectTop = container.getBoundingClientRect().top;
-                var anchorY = containerRectTop + snapAnchorY;
-                var closest = null;
-                var closestDistance = Infinity;
+            var containerRectTop = container.getBoundingClientRect().top;
+            var anchorY = containerRectTop + snapAnchorY;
+            var closest = null;
+            var closestDistance = Infinity;
 
-                for (var i = 0; i < len; i++) {
-                    var rect = programs[i].getBoundingClientRect();
-                    var centerY = rect.top + rect.height / 2;
-                    var distance = Math.abs(centerY - anchorY);
-                    if (distance < closestDistance) {
-                        closest = programs[i];
-                        closestDistance = distance;
-                    }
+            for (var i = 0; i < len; i++) {
+                var rect = programs[i].getBoundingClientRect();
+                var centerY = rect.top + rect.height / 2;
+                var distance = Math.abs(centerY - anchorY);
+                if (distance < closestDistance) {
+                    closest = programs[i];
+                    closestDistance = distance;
                 }
+            }
 
-                if (!closest) return;
-                snapToElement(closest, triggerCallback);
-            };
-        }
+            if (!closest) return;
+            snapToElement(closest, triggerCallback);
+        };
+
 
         // Scrollbar dragging
         thumb.addEventListener("mousedown", function (e) {
@@ -1783,26 +1862,24 @@ function initVinoHome() {
         lastScrollTop = container.scrollTop;
 
         // Click listener
-        if (!window.setListenerToProgram) {
-            window.setListenerToProgram = function () {
-                var $programs = $(".program");
-                $programs.each(function () {
-                    var $el = $(this);
-                    if ($el.data("tscr-d")) return;
-                    $el.data("tscr-d", true);
-                    tvii.setActualClickListener($programs, function (evt) {
-                        if (isSnappingBack) return;
-                        if (typeof onConfirmCallback === "function" && (this === currentSnappedElement)) {
-                            onConfirmCallback(this, false);
-                            return;
-                        }
-                        vino.lyt_startTouchEffect();
-                        vino.soundPlayVolume(scrollSfx, vol);
-                        snapToElement(this, true);
-                    });
+        window.setListenerToProgram = function () {
+            var $programs = $(".program");
+            $programs.each(function () {
+                var $el = $(this);
+                if ($el.data("tscr-d")) return;
+                $el.data("tscr-d", true);
+                tvii.setActualClickListener($programs, function (evt) {
+                    if (isSnappingBack) return;
+                    if (typeof onConfirmCallback === "function" && (this === currentSnappedElement)) {
+                        onConfirmCallback(this, false);
+                        return;
+                    }
+                    vino.lyt_startTouchEffect();
+                    vino.soundPlayVolume(scrollSfx, vol);
+                    snapToElement(this, true);
                 });
-            };
-        }
+            });
+        };
 
         // Previous/Next controls
         var hiddenUp = document.querySelector(".title-program-up");
@@ -2029,7 +2106,7 @@ function initVinoHome() {
         const start = parseInt(program.attr("data-aist-active"), 10);
         const end = parseInt(program.attr("data-aien-active"), 10);
         chlogo.off("error").on("error", function () {
-            chlogo.css("display", "none");
+            chlogo.hide();
         });
 
         // If same program but different channel, update only logo, channel name, and airdate
@@ -2048,7 +2125,7 @@ function initVinoHome() {
                 fullName: channelName,
             };
             activeProgram.time = { start: start, end: end };
-            chlogo.css("display", "block");
+            chlogo.show();
             chlogo.attr("src", logoSrc);
 
             const chnumElem = programDetails.find(".chnum");
@@ -2065,10 +2142,10 @@ function initVinoHome() {
         }
 
         // Otherwise: fetch new program details
-        programDetails.css("display", "none");
+        programDetails.hide();
         vino.loading_setIconRect(165, 180, 110, 110);
         vino.loading_setIconAppear(true);
-        chlogo.css("display", "block");
+        chlogo.show();
         chlogo.attr("src", logoSrc);
         //Expecting that miiverse post WILL be shown after requesting
         showMiiversePostPreview(false);
@@ -2136,7 +2213,7 @@ function initVinoHome() {
             programDetails.attr("data-chfoc", channelName);
             programDetails.attr("data-prfoc", programId);
             vino.loading_setIconAppear(false);
-            programDetails.css("display", "");
+            programDetails.show();
             details = null;
         }, function () {
             // Optional error handler
@@ -2179,6 +2256,9 @@ function initVinoHome() {
         return feelingQuery;
     }
 
+    // Keep a global/current request id
+    var currentMiiversePreviewReq = 0;
+
     function requestMiiversePostProgPreview(programId) {
         var miiversePrev = $(".bottom .miiverse-preview");
         showMiiversePostPreview(false);
@@ -2186,16 +2266,21 @@ function initVinoHome() {
         miiversePrev.find("span").text("");
         miiversePrev.find("img").attr("src", "/img/noMiiPost.png");
 
+        // Increment request counter each time function is called
+        var thisReq = ++currentMiiversePreviewReq;
+
         tvii.posts.requestPosts("1", ["PR" + programId], function (posts) {
+            // If this is not the latest request, ignore it
+            if (thisReq !== currentMiiversePreviewReq) return;
+
             const firstPost = posts[0];
             if (!firstPost) {
-                console.log("No posts found");
                 miiversePrev.find("span").addClass("placeholder");
                 miiversePrev.find("span").text("No posts for this program. Be the first!");
                 showMiiversePostPreview(true);
                 return;
             }
-            console.log(firstPost)
+
             miiversePrev.find("span").removeClass("placeholder");
             var body = firstPost.body;
             if (!body || body.length < 1) {
@@ -2207,21 +2292,31 @@ function initVinoHome() {
             var miiData = firstPost.mii_data;
             var feeling = firstPost.feeling_id;
             var feelingQ = getFeelingQueryFromPostXml(feeling);
-            var miiUrl = tvii.clientUrl + "/api/v1/miis?width=75&expression=" + feelingQ + "&data=" + encodeURIComponent(miiData) + "&type=face";
+            var miiUrl = tvii.clientUrl + "/api/v1/miis?width=75&expression=" +
+                feelingQ + "&data=" + encodeURIComponent(miiData) + "&type=face";
 
             var img = new Image();
             img.onload = function () {
-                miiversePrev.find("img").attr("src", miiUrl);
+                // Only set image if this is still the latest request
+                if (thisReq === currentMiiversePreviewReq) {
+                    miiversePrev.find("img").attr("src", miiUrl);
+                }
             };
             img.onerror = function () {
-                miiversePrev.find("img").attr("src", "/img/noMiiPost.png");
+                if (thisReq === currentMiiversePreviewReq) {
+                    miiversePrev.find("img").attr("src", "/img/noMiiPost.png");
+                }
             };
             img.src = miiUrl;
+
             showMiiversePostPreview(true);
         }, function () {
-            showMiiversePostPreview(true);
-        })
+            if (thisReq === currentMiiversePreviewReq) {
+                showMiiversePostPreview(true);
+            }
+        });
     }
+
 
     function drawLyt() {
         vino.lyt_drawFixedFrame(430 - 3, 217 - 3, 360 + 3, 77 + 4);
@@ -2505,6 +2600,9 @@ function initVinoHome() {
     }
 
     function cleanProgramPage() {
+        $(".trailer-modal p").text("")
+        $(".trailer-modal video").attr("src", "")
+        $(".trailer-modal video").attr("poster", "");
         var prodet = document.querySelector(".program-fulldetails-page .program-details");
         //Clear info
         prodet.querySelector(".prinfo .info").innerText = "";
@@ -2542,6 +2640,30 @@ function initVinoHome() {
         $(".program-fulldetails-page .content").stop(true, true).scrollLeft(0);
 
         if (!$(".next-page").data("pagimove")) {
+
+            $(".trailer-modal .back-modal").on("click", function (e) {
+                if (isHeaderButtonBlocked) return;
+                if ($(this).hasClass("disabled")) return;
+                if (e.originalEvent && !vino.navi_getRect()) {
+                    vino.lyt_startTouchEffect();
+                }
+
+                vino.soundPlayVolume("SE_CLOSE", 30);
+
+                $(".trailer-modal").hide();
+            })
+
+            $(".related-buttons .trailer").on("click", function (e) {
+                if (isHeaderButtonBlocked) return;
+                if ($(this).hasClass("disabled")) return;
+                if (e.originalEvent && !vino.navi_getRect()) {
+                    vino.lyt_startTouchEffect();
+                }
+                vino.soundPlayVolume("SE_POPUP", 30)
+
+                $(".trailer-modal").show();
+            })
+
             $(".prev-page").on("click", function (e) {
                 if (isMovingPrgmPage) return;
                 if (isHeaderButtonBlocked) return;
@@ -2579,19 +2701,19 @@ function initVinoHome() {
         }
 
         tvii.requestProgramDetails(activeProgram.info.id, "episode", function (details) {
-            var prodet = document.querySelector(".program-fulldetails-page .program-details");
+            var prodet = $(".program-fulldetails-page .program-details");
             console.log(details)
 
             var airFlags = tvii.getAiringFlags(activeProgram.info.airingAttrib);
             var timeStr = formatAMPMWithDate(activeProgram.time.start, activeProgram.time.end);
 
-            var chlogo = prodet.querySelector(".chlogo");
-            chlogo.onerror = function () {
-                chlogo.style.display = "none";
+            var chlogo = prodet.find(".chlogo");
+            chlogo[0].onerror = function () {
+                $(this).hide();
             };
 
-            chlogo.style.display = "";
-            chlogo.src = activeProgram.channel.logo + "?width=56";
+            chlogo.show();
+            chlogo.attr("src", activeProgram.channel.logo + "?width=56");
 
             var seasonEpisodeText = "";
             if (details.seasonNumber != null && details.episodeNumber != null) {
@@ -2601,53 +2723,50 @@ function initVinoHome() {
             var rating = details.tvRating ? details.tvRating.toString().replace(/\s+/g, '') : "";
             var year = details.releaseYear ? (rating ? " · " : "") + details.releaseYear : "";
 
-            prodet.querySelector(".prinfo .info").innerText = rating + year + seasonEpisodeText;
+            prodet.find(".prinfo .info").text(rating + year + seasonEpisodeText);
 
             head2.querySelector("span").innerText = details.name;
-            prodet.querySelector(".date").innerText = timeStr;
-            prodet.querySelector(".chname").innerText = activeProgram.channel.fullName;
-            prodet.querySelector(".chnumber").innerText = "Ch " + activeProgram.channel.number;
+            prodet.find(".date").text(timeStr);
+            prodet.find(".chname").text(activeProgram.channel.fullName);
+            prodet.find(".chnumber").text("Ch " + activeProgram.channel.number);
 
-            var tag = prodet.querySelector(".prinfo > .tag");
-            if (tag) {
-                // Remove both classes manually
-                tag.classList.remove("tagn");
-                tag.classList.remove("tagl");
+            var tag = prodet.find(".prinfo > .tag");
+            tag.removeClass("tagn");
+            tag.removeClass("tagl");
 
-                if (airFlags.isNew) {
-                    tag.classList.add("tagn");
-                    tag.textContent = "New";
-                    tag.style.display = "";
-                } else if (airFlags.isLive) {
-                    tag.classList.add("tagl");
-                    tag.textContent = "Live";
-                    tag.style.display = "";
-                } else {
-                    tag.textContent = "";
-                    tag.style.display = "none";
-                }
+            if (airFlags.isNew) {
+                tag.addClass("tagn");
+                tag.text("New");
+                tag.show();
+            } else if (airFlags.isLive) {
+                tag.addClass("tagl");
+                tag.text("Live");
+                tag.show();
+            } else {
+                tag.text("");
+                tag.hide();
             }
 
             if (details.metacriticSummary) {
-                prodet.querySelector(".scoreinfo>.text").innerText = "Metascore: ";
-                var scoreEl = prodet.querySelector(".scoreinfo>.metascore");
+                prodet.find(".scoreinfo>.text").text("Metascore: ");
+                var scoreEl = prodet.find(".scoreinfo>.metascore");
                 var scoreN = details.metacriticSummary.score;
-                scoreEl.style.display = "";
-                scoreEl.innerText = details.metacriticSummary.score;
-                scoreEl.classList.remove("green");
-                scoreEl.classList.remove("yellow");
-                scoreEl.classList.remove("red");
+                scoreEl.show();
+                scoreEl.text(details.metacriticSummary.score);
+                scoreEl.removeClass("green");
+                scoreEl.removeClass("yellow");
+                scoreEl.removeClass("red");
                 if (scoreN >= 61) {
-                    scoreEl.classList.add("green");
+                    scoreEl.addClass("green");
                 } else if (scoreN >= 40) {
-                    scoreEl.classList.add("yellow");
+                    scoreEl.addClass("yellow");
                 } else {
-                    scoreEl.classList.add("red");
+                    scoreEl.addClass("red");
                 }
             }
 
-            prodet.querySelector(".program-description>span").innerText = details.episodeTitle || "";
-            prodet.querySelector(".program-description>p").innerText = details.description || "";
+            prodet.find(".program-description>span").text(details.episodeTitle || "");
+            prodet.find(".program-description>p").text(details.description || "");
 
             if (details.images && details.images.length !== 0) {
                 var bucketPath = null;
@@ -2668,8 +2787,8 @@ function initVinoHome() {
                     bucketPath = details.images[0].bucketPath;
                 }
 
-                document.querySelector(".program-fulldetails-page .program-image>img")
-                    .setAttribute("src", tvii.clientUrl + "/images/catalog" + bucketPath + "?height=225");
+                $(".program-fulldetails-page .program-image>img")
+                    .attr("src", tvii.clientUrl + "/images/catalog" + bucketPath + "?height=225");
             }
 
             var genreString = "";
@@ -2687,9 +2806,9 @@ function initVinoHome() {
                 genreString = "No genre information.";
             }
 
-            var prgextra = document.querySelector(".program-fulldetails-page .program-extra")
+            var prgextra = $(".program-fulldetails-page .program-extra");
 
-            prgextra.querySelector(".info .genre .text").innerText = genreString;
+            prgextra.find(".info .genre .text").text(genreString);
 
             var formattedDate = "";
 
@@ -2715,11 +2834,13 @@ function initVinoHome() {
                 formattedDate = "No original air date.";
             }
 
-            prgextra.querySelector(".info .og-airdate .text").innerText = formattedDate;
+            prgextra.find(".info .og-airdate .text").text(formattedDate);
+
+            prgextra.find(".info .og-airdate .text").text(formattedDate);
 
             if (details.video) {
-                prgextra.querySelector("a.trailer").classList.remove("disabled");
-                prgextra.setAttribute("navi_target", "");
+                prgextra.find("a.trailer").removeClass("disabled");
+                prgextra.find("a.trailer").attr("navi_target", "");
 
                 var images = (details.video && details.video.images) ? details.video.images : [];
                 var maxImage = null;
@@ -2731,9 +2852,13 @@ function initVinoHome() {
                     }
                 }
                 console.log(maxImage)
+
+                $(".trailer-modal p").text(details.video.videoTitle)
+                $(".trailer-modal video").attr("src", details.video.url)
+                $(".trailer-modal video").attr("poster", maxImage.imageUrl);
             } else {
-                prgextra.querySelector("a.trailer").classList.add("disabled");
-                prgextra.removeAttribute("navi_target")
+                prgextra.find("a.trailer").addClass("disabled");
+                prgextra.find("a.trailer").removeAttr("navi_target")
             }
 
             vino.loading_setIconAppear(false);
@@ -2903,7 +3028,7 @@ function initVinoHome() {
 
         //Clean HTML for memory managment
         cleanMiiversePage();
-        $(".miiverse-modal").css("display", "none");
+        $(".miiverse-modal").hide();
         vino.requestGarbageCollect();
 
         top.animate({
@@ -2960,7 +3085,7 @@ function initVinoHome() {
         vino.loading_setIconAppear(true);
         tvii.pushStateWithQuery("scene", "olvview", true);
         cleanMiiversePage();
-        $(".miiverse-modal").css("display", "");
+        $(".miiverse-modal").show();
         headOlv.querySelector("span").innerText =
             activeProgram.info.name +
             (activeProgram.info.episodeTitle && activeProgram.info.episodeTitle != activeProgram.info.name ? ": " + activeProgram.info.episodeTitle : "");
@@ -3022,6 +3147,14 @@ function initVinoHome() {
         }
     }
 
+    function disablePostEmpathyButton(disable) {
+        if (disable) {
+            $(".miiverse-modal .post .yeah").addClass("disabled");
+        } else {
+            $(".miiverse-modal .post .yeah").removeClass("disabled");
+        }
+    }
+
     function requestPostsMiiversePage() {
         $(".miiverse-post").addClass("disabled");
         $(".miiverse-modal").html("");
@@ -3047,6 +3180,8 @@ function initVinoHome() {
                 var painting = post.painting;
                 var screenName = post.mii_name;
                 var postDate = post.create_time;
+                var empathies = post.empathies;
+                var isSpoiler = post.is_spoiler;
 
                 var content = null;
 
@@ -3067,6 +3202,9 @@ function initVinoHome() {
                     return $("<div>")
                         .addClass("mii")
                         .append(miiImg)
+                        .attr("tabindex", 0)
+                        .attr("navi_target", "")
+                        .attr("navi_no_reset", "")
                         .on("mousedown", function () {
                             $(this).find("img").css("top", 3);
                             vino.soundPlayVolume("SE_WORD_MII", 30);
@@ -3084,26 +3222,103 @@ function initVinoHome() {
 
                 var date = $("<span>").addClass("date").text(timeAgo(postDate));
 
-                var postCont = $("<div>");
-                postCont.addClass("post-content");
+                var postCont = $("<div>").addClass("post-content");
 
                 var postRCont = $("<div>");
                 postRCont.addClass("content");
+                if (isSpoiler) {
+                    postRCont.addClass("hidden");
+                }
 
                 postRCont.append(content);
                 postCont.append(postRCont)
 
                 var postMeta = $("<div>").addClass("post-meta");
 
-                var empathyAct = $("<button>").addClass("yeah").text("Yeah!").on("click", function () {
-                    if (!vino.navi_getRect()) {
-                        vino.lyt_startTouchEffect();
-                    }
-                    vino.soundPlayVolume("SE_WAVE_OK", 30);
-                    alert("Function not implemented.\nMay be available later.")
-                })
+                //var replyCount = $("<span>").addClass("replies").text(replyAmount);
 
-                var jumpPost = $("<button>").addClass("jump-post");
+                for (var a = 0; a < empathies.length; a++) {
+                    miitooAmount++;
+                }
+
+                var yeahCount = $("<span>").addClass("yeahs").text(miitooAmount);
+
+                var hasYeahed = false;
+                for (var x = 0; x < empathies.length; x++) {
+                    if (empathies[x].user_id === tvii.profile.user_id) {
+                        hasYeahed = true;
+                        break; // stop checking once we find a match
+                    }
+                }
+
+                var spoilerBut = $("<button>").addClass("spoiler")
+                    .attr("navi_target", "")
+                    .attr("navi_no_reset", "").attr("tabindex", 0).text("Show Spoiler");
+
+                if (isSpoiler) {
+                    (function ($spoilerbut, $postRCont) {
+                        $spoilerbut.on("click", function () {
+                            if (!vino.navi_getRect()) {
+                                vino.lyt_startTouchEffect();
+                            }
+                            vino.soundPlayVolume("SE_WAVE_OK_SUB", 30);
+                            $postRCont.removeClass("hidden");
+                            $spoilerbut.remove();
+                        });
+                    })(spoilerBut, postRCont);
+                }
+
+                var empathyAct = $("<button>").addClass("yeah").attr("tabindex", 0).text("Yeah!");
+                if (hasYeahed) {
+                    empathyAct.text("Unyeah!")
+                    empathyAct.addClass("yeahed");
+                    yeahCount.addClass("added");
+                }
+
+                (function (id, $yeahCount, $empathyAct) {
+                    empathyAct.on("click", function () {
+                        if ($(this).hasClass("disabled")) return;
+                        disablePostEmpathyButton(true);
+                        disableTopBotHeaders(true);
+                        if (!vino.navi_getRect()) {
+                            vino.lyt_startTouchEffect();
+                        }
+
+                        if ($(this).hasClass("yeahed")) {
+                            vino.soundPlayVolume("SE_WAVE_CANCEL", 30);
+                            tvii.posts.addEmpathyToPost(true, id, function (success) {
+                                if (success) {
+                                    // Always use jQuery .text() (not textContent)
+                                    var current = parseInt($yeahCount.text(), 10) || 0;
+                                    $yeahCount.text(current - 1);
+                                    $empathyAct.text("Yeah!")
+                                    $empathyAct.removeClass("yeahed");
+                                    $yeahCount.removeClass("added");
+                                }
+                                disablePostEmpathyButton(false);
+                                disableTopBotHeaders(false);
+                            });
+                            return;
+                        }
+
+                        vino.soundPlayVolume("SE_REMOTE_FINISH2", 30);
+
+                        tvii.posts.addEmpathyToPost(false, id, function (success) {
+                            if (success) {
+                                // Always use jQuery .text() (not textContent)
+                                var current = parseInt($yeahCount.text(), 10) || 0;
+                                $yeahCount.text(current + 1);
+                                $empathyAct.text("Unyeah!")
+                                $empathyAct.addClass("yeahed");
+                                $yeahCount.addClass("added");
+                            }
+                            disablePostEmpathyButton(false);
+                            disableTopBotHeaders(false);
+                        });
+                    });
+                })(postId, yeahCount, empathyAct);
+
+                var jumpPost = $("<button>").addClass("jump-post").attr("tabindex", 0);
                 (function (id) {
                     jumpPost.on("click", function () {
                         if (!vino.navi_getRect()) {
@@ -3114,13 +3329,13 @@ function initVinoHome() {
                     });
                 })(postId);
 
-                var replyCount = $("<span>").addClass("replies").text(replyAmount);
-
-                var yeahCount = $("<span>").addClass("yeahs").text(miitooAmount);
+                if (isSpoiler) {
+                    postCont.append(spoilerBut)
+                }
 
                 postMeta.append(empathyAct)
                 postMeta.append(jumpPost)
-                postMeta.append(replyCount)
+                //postMeta.append(replyCount)
                 postMeta.append(yeahCount)
 
                 postCont.append(postMeta);
@@ -3157,7 +3372,9 @@ function initVinoHome() {
 
         var postTargets = [
             ".post .yeah",
-            ".post .jump-post"
+            ".post .jump-post",
+            ".post .mii",
+            ".post .spoiler"
         ];
 
         if (setToModal) {
@@ -3181,7 +3398,18 @@ function initVinoHome() {
         }
     }
 
+    function actuallyInitHome() {
+        initLiveTab();
+        setMiiverseButton();
+    }
+
     function initLiveTab() {
+        tvii.pushStateWithQuery("scene", "livetab", false);
+        $(".program-central").html(tvii.templates.get("prg_central"));
+        //Set up template loc
+        tvii.templates.setUpLocHTML();
+        tvii.setUpPageTip();
+
         var footer = $(".footer");
         footer.scrollTop(footer[0].scrollHeight);
         vino.loading_setIconAppear(true);
@@ -3197,13 +3425,28 @@ function initVinoHome() {
             setContainerPagination();
             vino.loading_setIconAppear(false);
             window.snapToClosestProgram(true);
-            setMiiverseButton();
-            setTimeout(function () {
-                drawLyt();
-            }, 0)
+            drawLyt();
         }, function () {
             vino.loading_setIconAppear(false);
         })
+    }
+
+    function initGuideTab() {
+        tvii.pushStateWithQuery("scene", "guidetab", false);
+        showMiiversePostPreview(false);
+        clearInterval(window.infoUpdInterval);
+        vino.lyt_reset();
+        $(".program-central").html("");
+        vino.requestGarbageCollect();
+    }
+
+    function initRecommendedTab() {
+        tvii.pushStateWithQuery("scene", "recomtab", false);
+        showMiiversePostPreview(false);
+        clearInterval(window.infoUpdInterval);
+        vino.lyt_reset();
+        $(".program-central").html("");
+        vino.requestGarbageCollect();
     }
 
     function onProgramPreviewPopstate(e) {
@@ -3256,7 +3499,7 @@ function initVinoHome() {
                 vino.soundPlayVolume("SE_POST_BTN", 30)
             }
             setMiiverseModalNavi(true);
-            miiverseModal.css("display", "");
+            miiverseModal.show();
         })
 
         //Back button on post modal
@@ -3271,21 +3514,17 @@ function initVinoHome() {
             }
 
             vino.soundPlayVolume("SE_WAVE_CANCEL", 30);
-            miiverseModal.css("display", "none");
+            miiverseModal.hide();
             setMiiverseModalNavi(false);
         });
 
         function lockPostModal(lock) {
             if (lock) {
-                miiverseModal.find(".btn-1").addClass("disabled");
-                miiverseModal.find(".btn-2").addClass("disabled");
+                miiverseModal.find(".btn-1, .btn-2").addClass("disabled");
             } else {
-                miiverseModal.find(".btn-1").removeClass("disabled");
-                miiverseModal.find(".btn-2").removeClass("disabled");
+                miiverseModal.find(".btn-1, .btn-2").removeClass("disabled");
             }
-            miiverseModal.find(".feeling-buttons").css("pointer-events", lock ? "none" : "auto");
-            miiverseModal.find(".textarea-container").css("pointer-events", lock ? "none" : "auto");
-            miiverseModal.find(".spoiler-button").css("pointer-events", lock ? "none" : "auto");
+            miiverseModal.find(".post-menu").css("pointer-events", lock ? "none" : "auto");
         }
 
         //Post button on post modal
@@ -3354,12 +3593,12 @@ function initVinoHome() {
                     miiverseModal.find(".textarea-menu li:first-child label").addClass("checked");
 
                     miiverseModal.find(".textarea-text-input").val("").trigger("change");
-                    miiverseModal.find(".textarea-memo").css("display", "none");
-                    miiverseModal.find(".textarea-text").css("display", "");
+                    miiverseModal.find(".textarea-memo").hide();
+                    miiverseModal.find(".textarea-text").show();
                     miiverseModal.find(".textarea-memo-preview").css("background-image", "url(/img/noimg.png)");
                     vino.memo_reset();
                     lockPostModal(false);
-                    miiverseModal.css("display", "none");
+                    miiverseModal.hide();
                     setTimeout(function () {
                         requestPostsMiiversePage();
                     }, 0);
@@ -3422,13 +3661,13 @@ function initVinoHome() {
             $(this).parent().addClass("checked");
 
             if ($(this).val() === "body") {
-                $(".textarea-memo").css("display", "none");
-                $(".textarea-text").css("display", "");
+                $(".textarea-memo").hide();
+                $(".textarea-text").show();
                 $(".textarea-text-input").focus();
                 vino.wakeKeyboard();
             } else {
-                $(".textarea-text").css("display", "none");
-                $(".textarea-memo").css("display", "");
+                $(".textarea-text").hide();
+                $(".textarea-memo").show();
                 memoStart();
             }
         });
@@ -3479,7 +3718,7 @@ function initVinoHome() {
     }
 
     //Init live tab action
-    initLiveTab();
+    actuallyInitHome();
 
 };
 
