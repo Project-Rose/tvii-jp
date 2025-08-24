@@ -512,13 +512,13 @@ var tvii = {
         if (currentQuery == null) {
             queryString += queryString
                 ? "&" +
-                  encodeURIComponent(queryName) +
-                  "=" +
-                  encodeURIComponent(queryValue)
+                encodeURIComponent(queryName) +
+                "=" +
+                encodeURIComponent(queryValue)
                 : "?" +
-                  encodeURIComponent(queryName) +
-                  "=" +
-                  encodeURIComponent(queryValue);
+                encodeURIComponent(queryName) +
+                "=" +
+                encodeURIComponent(queryValue);
         } else {
             var regex = new RegExp(
                 "([?&])" + encodeURIComponent(queryName) + "=.*?(&|$)",
@@ -527,10 +527,10 @@ var tvii = {
             queryString = queryString.replace(
                 regex,
                 "$1" +
-                    encodeURIComponent(queryName) +
-                    "=" +
-                    encodeURIComponent(queryValue) +
-                    "$2"
+                encodeURIComponent(queryName) +
+                "=" +
+                encodeURIComponent(queryValue) +
+                "$2"
             );
         }
 
@@ -612,19 +612,41 @@ var tvii = {
                 var elRect = el.getBoundingClientRect();
                 if (!elRect) return;
 
-                // Adjust vertical scroll
-                if (elRect.top < parentRect.top) {
-                    parent.scrollTop -= parentRect.top - elRect.top;
-                } else if (elRect.bottom > parentRect.bottom) {
-                    parent.scrollTop += elRect.bottom - parentRect.bottom;
+                var rectStr = vino.navi_getRect();
+
+                var parts = rectStr.split(",").map(function (n) {
+                    return parseInt(n, 10);
+                });
+
+                var naviRect = {
+                    left: parts[0],
+                    top: parts[1],
+                    width: parts[2],
+                    height: parts[3]
+                };
+
+                // compare
+                if (
+                    elRect.left === naviRect.left &&
+                    elRect.top === naviRect.top &&
+                    elRect.width === naviRect.width &&
+                    elRect.height === naviRect.height
+                ) {
+                    // Adjust vertical scroll
+                    if (elRect.top < parentRect.top) {
+                        parent.scrollTop -= parentRect.top - elRect.top;
+                    } else if (elRect.bottom > parentRect.bottom) {
+                        parent.scrollTop += elRect.bottom - parentRect.bottom;
+                    }
+
+                    // Adjust horizontal scroll
+                    if (elRect.left < parentRect.left) {
+                        parent.scrollLeft -= parentRect.left - elRect.left;
+                    } else if (elRect.right > parentRect.right) {
+                        parent.scrollLeft += elRect.right - parentRect.right;
+                    }
                 }
 
-                // Adjust horizontal scroll
-                if (elRect.left < parentRect.left) {
-                    parent.scrollLeft -= parentRect.left - elRect.left;
-                } else if (elRect.right > parentRect.right) {
-                    parent.scrollLeft += elRect.right - parentRect.right;
-                }
             },
             true
         );
@@ -762,16 +784,16 @@ var tvii = {
         xhr.open(
             "GET",
             tvii.clientUrl +
-                "/api/v1/providers/lineup/" +
-                lineup +
-                "?start=" +
-                String(timestamp) +
-                "&duration=" +
-                String(duration) +
-                "&limit=" +
-                String(limit) +
-                "&offset=" +
-                String(offset)
+            "/api/v1/providers/lineup/" +
+            lineup +
+            "?start=" +
+            String(timestamp) +
+            "&duration=" +
+            String(duration) +
+            "&limit=" +
+            String(limit) +
+            "&offset=" +
+            String(offset)
         );
         xhr.onload = function () {
             if (xhr.status === 200) {
@@ -811,11 +833,11 @@ var tvii = {
         tvii.sendXHR(
             "GET",
             tvii.clientUrl +
-                "/api/v1/providers/program/" +
-                id +
-                "/details" +
-                "?type=" +
-                type,
+            "/api/v1/providers/program/" +
+            id +
+            "/details" +
+            "?type=" +
+            type,
             function (responseText) {
                 var details = JSON.parse(responseText).result.item;
                 callbackSuccess(details);
@@ -1461,8 +1483,8 @@ function initVinoSetup() {
             xhr.open(
                 "GET",
                 tvii.clientUrl +
-                    "/api/v1/socials/XCodeCheck?code=" +
-                    codeToCheck
+                "/api/v1/socials/XCodeCheck?code=" +
+                codeToCheck
             );
             xhr.onload = function () {
                 if (xhr.status === 200) {
@@ -1553,10 +1575,10 @@ function initVinoSetup() {
             tvii.sendXHR(
                 "GET",
                 tvii.clientUrl +
-                    "/api/v1/providers/countries/CA?type=providers&city=" +
-                    encodeURIComponent(city) +
-                    "&region=" +
-                    encodeURIComponent(region),
+                "/api/v1/providers/countries/CA?type=providers&city=" +
+                encodeURIComponent(city) +
+                "&region=" +
+                encodeURIComponent(region),
                 function (responseText) {
                     var providers = JSON.parse(responseText).result;
                     setUpProviderAnchors(providers);
@@ -1778,8 +1800,8 @@ function initVinoSetup() {
         $(".tvproviders>a").addClass("none");
         $(
             '.tvproviders>a[data-provider-type="' +
-                $(this).attr("data-provider-filter") +
-                '"]'
+            $(this).attr("data-provider-filter") +
+            '"]'
         ).removeClass("none");
     });
 }
@@ -2526,16 +2548,16 @@ function initVinoHome() {
                     .find(".chnum")
                     .text(
                         chfn +
-                            (details.tvRating
-                                ? " · " +
-                                  details.tvRating
-                                      .toString()
-                                      .replace(/\s+/g, "")
-                                : "") +
-                            (details.releaseYear
-                                ? " · " + details.releaseYear
-                                : "") +
-                            seasonEpisodeText
+                        (details.tvRating
+                            ? " · " +
+                            details.tvRating
+                                .toString()
+                                .replace(/\s+/g, "")
+                            : "") +
+                        (details.releaseYear
+                            ? " · " + details.releaseYear
+                            : "") +
+                        seasonEpisodeText
                     );
 
                 programDetails.find(".pname").text(details.name);
@@ -2738,24 +2760,24 @@ function initVinoHome() {
             return catId === tvii.tvgAirGenre.NEWS
                 ? C_NEWS
                 : catId === tvii.tvgAirGenre.MOVIES
-                  ? C_MOVIES
-                  : catId === tvii.tvgAirGenre.SPORTS
-                    ? C_SPORTS
-                    : catId === tvii.tvgAirGenre.FAMILY
-                      ? C_FAMILY
-                      : C_GEN;
+                    ? C_MOVIES
+                    : catId === tvii.tvgAirGenre.SPORTS
+                        ? C_SPORTS
+                        : catId === tvii.tvgAirGenre.FAMILY
+                            ? C_FAMILY
+                            : C_GEN;
         };
 
         var getCategoryText = function (catId) {
             return catId === tvii.tvgAirGenre.NEWS
                 ? T_NEWS
                 : catId === tvii.tvgAirGenre.MOVIES
-                  ? T_MOVIES
-                  : catId === tvii.tvgAirGenre.SPORTS
-                    ? T_SPORTS
-                    : catId === tvii.tvgAirGenre.FAMILY
-                      ? T_FAMILY
-                      : T_GEN;
+                    ? T_MOVIES
+                    : catId === tvii.tvgAirGenre.SPORTS
+                        ? T_SPORTS
+                        : catId === tvii.tvgAirGenre.FAMILY
+                            ? T_FAMILY
+                            : T_GEN;
         };
 
         var programDivs = $(".program-list .contents .program");
@@ -2811,10 +2833,10 @@ function initVinoHome() {
                         STR_STARTED +
                         (hours > 0
                             ? hours +
-                              STR_HOUR +
-                              (minutes > 0
-                                  ? " " + minutes + STR_MIN_AGO2
-                                  : STR_AGO)
+                            STR_HOUR +
+                            (minutes > 0
+                                ? " " + minutes + STR_MIN_AGO2
+                                : STR_AGO)
                             : minutes + STR_MIN_AGO);
                 }
 
@@ -2852,8 +2874,8 @@ function initVinoHome() {
                     STR_STARTED +
                     (hours > 0
                         ? hours +
-                          STR_HOUR +
-                          (minutes > 0 ? " " + minutes + STR_MIN_AGO2 : STR_AGO)
+                        STR_HOUR +
+                        (minutes > 0 ? " " + minutes + STR_MIN_AGO2 : STR_AGO)
                         : minutes + STR_MIN_AGO);
             }
 
@@ -3259,9 +3281,9 @@ function initVinoHome() {
                     $(".program-fulldetails-page .program-image>img").attr(
                         "src",
                         tvii.clientUrl +
-                            "/images/catalog" +
-                            bucketPath +
-                            "?height=225"
+                        "/images/catalog" +
+                        bucketPath +
+                        "?height=225"
                     );
                 }
 
@@ -3315,24 +3337,9 @@ function initVinoHome() {
                 if (details.video) {
                     prgextra.find("a.trailer").removeClass("disabled");
                     prgextra.find("a.trailer").attr("navi_target", "");
-
-                    var images =
-                        details.video && details.video.images
-                            ? details.video.images
-                            : [];
-                    var maxImage = null;
-
-                    for (var i = 0; i < images.length; i++) {
-                        var img = images[i];
-                        if (!maxImage || img.height > maxImage.height) {
-                            maxImage = img;
-                        }
-                    }
-                    console.log(maxImage);
-
+                    
                     $(".trailer-modal p").text(details.video.videoTitle);
                     $(".trailer-modal video").attr("src", details.video.url);
-                    $(".trailer-modal video").attr("poster", maxImage.imageUrl);
                 } else {
                     prgextra.find("a.trailer").addClass("disabled");
                     prgextra.find("a.trailer").removeAttr("navi_target");
@@ -3632,7 +3639,7 @@ function initVinoHome() {
         headOlv.querySelector("span").innerText =
             activeProgram.info.name +
             (activeProgram.info.episodeTitle &&
-            activeProgram.info.episodeTitle != activeProgram.info.name
+                activeProgram.info.episodeTitle != activeProgram.info.name
                 ? ": " + activeProgram.info.episodeTitle
                 : "");
 
@@ -4004,7 +4011,10 @@ function initVinoHome() {
     }
 
     function initLiveTab() {
+        disableTopBotHeaders(true);
         tvii.pushStateWithQuery("scene", "livetab", false);
+        showMiiversePostPreview(false);
+        $(".footer .bottom").removeClass("guideopt");
         $(".program-central").html(tvii.templates.get("prg_central"));
         //Set up template loc
         tvii.templates.setUpLocHTML();
@@ -4032,16 +4042,20 @@ function initVinoHome() {
                 vino.loading_setIconAppear(false);
                 window.snapToClosestProgram(true);
                 drawLyt();
+                disableTopBotHeaders(false);
             },
             function () {
+                disableTopBotHeaders(false);
                 vino.loading_setIconAppear(false);
             }
         );
     }
 
     function initGuideTab() {
-        tvii.pushStateWithQuery("scene", "guidetab", false);
+        tvii.posts.abortApiRequest();
         showMiiversePostPreview(false);
+        $(".footer .bottom").addClass("guideopt");
+        tvii.pushStateWithQuery("scene", "guidetab", false);
         clearInterval(window.infoUpdInterval);
         vino.lyt_reset();
         $(".program-central").html("");
@@ -4049,8 +4063,10 @@ function initVinoHome() {
     }
 
     function initRecommendedTab() {
-        tvii.pushStateWithQuery("scene", "recomtab", false);
+        tvii.posts.abortApiRequest();
         showMiiversePostPreview(false);
+        $(".footer .bottom").addClass("guideopt");
+        tvii.pushStateWithQuery("scene", "recomtab", false);
         clearInterval(window.infoUpdInterval);
         vino.lyt_reset();
         $(".program-central").html("");
@@ -4338,10 +4354,10 @@ function initVinoHome() {
             .attr(
                 "src",
                 tvii.clientUrl +
-                    "/api/v1/miis?width=68&expression=normal" +
-                    "&data=" +
-                    encodeURIComponent(miiData) +
-                    "&type=face"
+                "/api/v1/miis?width=68&expression=normal" +
+                "&data=" +
+                encodeURIComponent(miiData) +
+                "&type=face"
             );
 
         miiverseModal

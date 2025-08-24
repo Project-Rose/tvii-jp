@@ -3,7 +3,7 @@ if (typeof vino === "undefined") {
     console.log("Initialize API emulation");
     if (typeof wiiu === "undefined") {
         ((window.wiiu = {}),
-            (window.wiiu.gamepad = { update: function () {} }));
+            (window.wiiu.gamepad = { update: function () { } }));
     }
 
     // fake console data
@@ -25,12 +25,12 @@ if (typeof vino === "undefined") {
         requestGarbageCollect: function () {
             console.log("Requested Garbage collection");
         },
-        acr_setHostName: function (hostname) {},
-        acr_setPort: function (port) {},
-        acr_startMatching: function (gain, msec, times, conf, msecxtimes) {},
-        acr_stopMatching: function () {},
-        acr_getLastResult: function () {},
-        acr_getRemainedTime: function () {},
+        acr_setHostName: function (hostname) { },
+        acr_setPort: function (port) { },
+        acr_startMatching: function (gain, msec, times, conf, msecxtimes) { },
+        acr_stopMatching: function () { },
+        acr_getLastResult: function () { },
+        acr_getRemainedTime: function () { },
         acr_getHostName: function () {
             return "acr-test.i.tv";
         },
@@ -80,7 +80,7 @@ if (typeof vino === "undefined") {
         lyt_startTouchEffect: function () {
             console.log("Show touch effect");
         },
-        lyt_setFixedFrameSemitransparency: function (set) {},
+        lyt_setFixedFrameSemitransparency: function (set) { },
         lyt_startTouchEffectToFocused: function () {
             console.log("Show touch effect to focused");
         },
@@ -163,11 +163,11 @@ if (typeof vino === "undefined") {
         runTwoButtonDialog: function (msg, lBtnStr, rBtnStr) {
             return !confirm(
                 msg +
-                    "\n\n[ " +
-                    (lBtnStr ? lBtnStr : "Cancel") +
-                    " ]  [ " +
-                    (rBtnStr ? rBtnStr : "OK") +
-                    " ]"
+                "\n\n[ " +
+                (lBtnStr ? lBtnStr : "Cancel") +
+                " ]  [ " +
+                (rBtnStr ? rBtnStr : "OK") +
+                " ]"
             );
         },
         info_getCountry: function () {
@@ -208,7 +208,7 @@ if (typeof vino === "undefined") {
             );
             return 1;
         },
-        soundStop: function (soundId) {},
+        soundStop: function (soundId) { },
         ir_enableCodeset: function (one) {
             console.log("Enabled IR codeset " + one);
         },
@@ -227,8 +227,46 @@ if (typeof vino === "undefined") {
         ir_muteOneShotSound: function (bool) {
             console.log("IR sound is enabled?: " + bool);
         },
-        navi_reset: function () {},
-        navi_setToFocused: function (set) {},
+        navi_reset: function () { },
+        navi_setToFocused: function () {
+            if (document.querySelector(".navi_draw")) {
+                document.querySelector(".navi_draw").remove();
+            }
+
+            var div = document.createElement("div");
+            div.classList.add("navi_draw");
+            div.style.position = "absolute";
+            div.style.border = "4px solid blue";
+            div.style.backgroundColor = "rgba(255, 0, 0, 0.1)";
+            div.style.boxSizing = "border-box";
+            div.style.pointerEvents = "none"; // doesn't block clicks
+            div.style.zIndex = "9999";
+
+            document.body.appendChild(div);
+
+            function updateBox() {
+                var el = document.activeElement;
+                if (!el) return;
+
+                var rect = el.getBoundingClientRect();
+                div.style.left = rect.left + window.scrollX + "px";
+                div.style.top = rect.top + window.scrollY + "px";
+                div.style.width = rect.width + "px";
+                div.style.height = rect.height + "px";
+            }
+
+            // update once immediately
+            updateBox();
+
+            // update when scrolling or resizing
+            window.addEventListener("scroll", updateBox, true);   // capture scrolls inside containers too
+            window.addEventListener("resize", updateBox);
+
+            // optional: update when focus changes
+            document.addEventListener("focusin", updateBox);
+
+            console.log("[NAVI] Navi frame active and tracking focus.");
+        },
         navi_getRect: function () {
             return;
         },
@@ -242,9 +280,36 @@ if (typeof vino === "undefined") {
             console.log("Base visibility is " + bool);
         },
         navi_set: function (one, two, three, four) {
-            console.log("Navi set at " + one, two, three, four);
+            if (document.querySelector(".navi_draw")) {
+                document.querySelector(".navi_draw").remove();
+            }
+            function drawBox() {
+                document.removeEventListener("DOMContentLoaded", drawBox);
+                var div = document.createElement("div");
+                div.classList.add("navi_draw");
+                div.style.position = "absolute";
+                div.style.left = one + "px";
+                div.style.top = two + "px";
+                div.style.width = three + "px";
+                div.style.height = four + "px";
+                div.style.border = "4px solid blue";
+                div.style.backgroundColor = "rgb(255 0 0 / 10%)";
+                div.style.boxSizing = "border-box";
+                div.style.pointerEvents = "none"; // optional: so it doesn't block interaction
+                div.style.zIndex = "9999"; // ensure it's on top
+
+                document.body.appendChild(div);
+
+                console.log("[NAVI] Drew frame at " + one, two, three, four);
+            }
+
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", drawBox);
+            } else {
+                drawBox();
+            }
         },
-        navi_decide: function () {},
+        navi_decide: function () { },
         act_getCurrentSlotNo: function () {
             console.log('Returned account slot "1"');
             return 1;
@@ -260,9 +325,9 @@ if (typeof vino === "undefined") {
         act_getMiiImageEx: function (slot, expression) {
             console.log(
                 "Returned Mii image from " +
-                    slot +
-                    " with expression " +
-                    expression
+                slot +
+                " with expression " +
+                expression
             );
             var imageUrl;
             switch (expression) {
@@ -400,11 +465,11 @@ if (typeof vino === "undefined") {
         jumpToVod: function (url, TID, bool) {
             console.log(
                 "Jump to VOD app of TID " +
-                    TID +
-                    " with URL " +
-                    url +
-                    " is " +
-                    bool
+                TID +
+                " with URL " +
+                url +
+                " is " +
+                bool
             );
             window.location.href = url;
         },
@@ -454,25 +519,25 @@ if (typeof vino === "undefined") {
         ) {
             console.log(
                 "Post to Miiverse with message " +
-                    '"' +
-                    body +
-                    '"' +
-                    " with topic " +
-                    topicTag +
-                    " with feeling ID " +
-                    feelingID +
-                    " with spoilers " +
-                    spoiler +
-                    " with search key " +
-                    searchkey1 +
-                    " with search key " +
-                    searchkey2 +
-                    " with search key " +
-                    searchkey3 +
-                    " with search key " +
-                    searchkey4 +
-                    " with search key " +
-                    searchkey5
+                '"' +
+                body +
+                '"' +
+                " with topic " +
+                topicTag +
+                " with feeling ID " +
+                feelingID +
+                " with spoilers " +
+                spoiler +
+                " with search key " +
+                searchkey1 +
+                " with search key " +
+                searchkey2 +
+                " with search key " +
+                searchkey3 +
+                " with search key " +
+                searchkey4 +
+                " with search key " +
+                searchkey5
             );
         },
         olv_postTextFixedPhrase: function (
@@ -488,25 +553,25 @@ if (typeof vino === "undefined") {
         ) {
             console.log(
                 "Post to Miiverse fixed phrase with message " +
-                    '"' +
-                    body +
-                    '"' +
-                    " with topic " +
-                    topicTag +
-                    " with feeling ID " +
-                    feelingID +
-                    " with spoilers " +
-                    spoiler +
-                    " with search key " +
-                    searchkey1 +
-                    " with search key " +
-                    searchkey2 +
-                    " with search key " +
-                    searchkey3 +
-                    " with search key " +
-                    searchkey4 +
-                    " with search key " +
-                    searchkey5
+                '"' +
+                body +
+                '"' +
+                " with topic " +
+                topicTag +
+                " with feeling ID " +
+                feelingID +
+                " with spoilers " +
+                spoiler +
+                " with search key " +
+                searchkey1 +
+                " with search key " +
+                searchkey2 +
+                " with search key " +
+                searchkey3 +
+                " with search key " +
+                searchkey4 +
+                " with search key " +
+                searchkey5
             );
         },
         olv_postImage: function (
@@ -522,25 +587,25 @@ if (typeof vino === "undefined") {
         ) {
             console.log(
                 "Post to Miiverse with drawing " +
-                    '"' +
-                    painting +
-                    '"' +
-                    " with topic " +
-                    topicTag +
-                    " with feeling ID " +
-                    feelingID +
-                    " with spoilers " +
-                    spoiler +
-                    " with search key " +
-                    searchkey1 +
-                    " with search key " +
-                    searchkey2 +
-                    " with search key " +
-                    searchkey3 +
-                    " with search key " +
-                    searchkey4 +
-                    " with search key " +
-                    searchkey5
+                '"' +
+                painting +
+                '"' +
+                " with topic " +
+                topicTag +
+                " with feeling ID " +
+                feelingID +
+                " with spoilers " +
+                spoiler +
+                " with search key " +
+                searchkey1 +
+                " with search key " +
+                searchkey2 +
+                " with search key " +
+                searchkey3 +
+                " with search key " +
+                searchkey4 +
+                " with search key " +
+                searchkey5
             );
         },
         olv_postImageFixedPhrase: function (
@@ -556,28 +621,28 @@ if (typeof vino === "undefined") {
         ) {
             console.log(
                 "Post to Miiverse fixed phrase with drawing " +
-                    '"' +
-                    painting +
-                    '"' +
-                    " with topic " +
-                    topicTag +
-                    " with feeling ID " +
-                    feelingID +
-                    " with spoilers " +
-                    spoiler +
-                    " with search key " +
-                    searchkey1 +
-                    " with search key " +
-                    searchkey2 +
-                    " with search key " +
-                    searchkey3 +
-                    " with search key " +
-                    searchkey4 +
-                    " with search key " +
-                    searchkey5
+                '"' +
+                painting +
+                '"' +
+                " with topic " +
+                topicTag +
+                " with feeling ID " +
+                feelingID +
+                " with spoilers " +
+                spoiler +
+                " with search key " +
+                searchkey1 +
+                " with search key " +
+                searchkey2 +
+                " with search key " +
+                searchkey3 +
+                " with search key " +
+                searchkey4 +
+                " with search key " +
+                searchkey5
             );
         },
-        suggest_isOpening: function () {},
+        suggest_isOpening: function () { },
         suggest_set: function (
             sug1,
             sug2,
@@ -592,36 +657,36 @@ if (typeof vino === "undefined") {
         ) {
             console.log(
                 "Set suggestion strings " +
-                    '"' +
-                    sug1 +
-                    '", ' +
-                    '"' +
-                    sug2 +
-                    '", ' +
-                    '"' +
-                    sug3 +
-                    '", ' +
-                    '"' +
-                    sug4 +
-                    '", ' +
-                    '"' +
-                    sug5 +
-                    '", ' +
-                    '"' +
-                    sug6 +
-                    '", ' +
-                    '"' +
-                    sug7 +
-                    '", ' +
-                    '"' +
-                    sug8 +
-                    '", ' +
-                    '"' +
-                    sug9 +
-                    '", ' +
-                    '"' +
-                    sug10 +
-                    '"'
+                '"' +
+                sug1 +
+                '", ' +
+                '"' +
+                sug2 +
+                '", ' +
+                '"' +
+                sug3 +
+                '", ' +
+                '"' +
+                sug4 +
+                '", ' +
+                '"' +
+                sug5 +
+                '", ' +
+                '"' +
+                sug6 +
+                '", ' +
+                '"' +
+                sug7 +
+                '", ' +
+                '"' +
+                sug8 +
+                '", ' +
+                '"' +
+                sug9 +
+                '", ' +
+                '"' +
+                sug10 +
+                '"'
             );
             return true;
         },
@@ -629,7 +694,7 @@ if (typeof vino === "undefined") {
             console.log("Reset suggestion strings");
             return true;
         },
-        suggest_getString: function () {},
+        suggest_getString: function () { },
         pc_checkPIN: function () {
             console.log("PIN is true, perentl conrol allowed");
             return true;
