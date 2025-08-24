@@ -132,3 +132,7 @@ dist
 dockerfile.dev
 core
 src/config/
+
+.vscode/
+.idea/
+pushToStg.sh
