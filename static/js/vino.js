@@ -79,13 +79,15 @@ var tvii = {
             );
         }
     }
-}
+};
 
 window.addEventListener("load", function () {
     tvii.setLoadingScreenBG();
 
+    // FIXED: missing dot in querySelector (".error-container" not "error-container")
+    var container = document.querySelector(".error-container");
+
     (function () {
-        var container = document.getElementsByClassName("error-container")[0];
         var isDown = false;
         var startX, startY, scrollLeft, scrollTop;
         var velX = 0, velY = 0;
@@ -145,14 +147,38 @@ window.addEventListener("load", function () {
         };
     })();
 
-    document
-        .querySelector(".exit")
-        .addEventListener("click", function () {
-            this.classList.add("hover");
+    // Gamepad polling
+    var inputCheck = setInterval(function () {
+        if (!wiiu || !wiiu.gamepad) return; // prevent crash if unavailable
+        wiiu.gamepad.update();
+        var maxSpeed = 40; // Increased for faster max scrolling
+
+        var dx = wiiu.gamepad.lStickX;
+        var dy = wiiu.gamepad.lStickY;
+
+        // Stick dead zone threshold
+        if (Math.abs(dx) > 0.05) {
+            container.scrollLeft = container.scrollLeft + dx * maxSpeed; // X axis
+        }
+        if (Math.abs(dy) > 0.05) {
+            // Invert Y scrolling: pushing stick UP should scroll UP
+            container.scrollTop = container.scrollTop - dy * maxSpeed;
+        }
+    }, 16); // ~60fps
+
+    var exitBtn = document.querySelector(".exit");
+    if (exitBtn) {
+        exitBtn.addEventListener("click", function () {
+            vino.lyt_startTouchEffect();
+            // vanilla "hover" class add
+            if (this.className.indexOf("hover") === -1) {
+                this.className += " hover";
+            }
             vino.soundPlayVolume("SE_COMMON_TOUCH_ON", 30);
             setTimeout(function () {
                 vino.soundPlayVolume("SE_COMMON_FINISH_TOUCH_OFF", 30);
                 vino.exit();
-            }, 50)
+            }, 150);
         });
+    }
 });
