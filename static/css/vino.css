@@ -9,30 +9,46 @@ body {
     margin: 0;
     padding: 0;
     color: #323232;
-    transition: opacity 0.5s ease-in-out;
+    background: url(/img/bg_vino.png) no-repeat;
+}
+
+.error-container {
+    height: 480px;
+    overflow: hidden;
+    position: relative;
+    width: 854px;
 }
 
 .error-container p {
-    position: relative;
-    display: -webkit-box;
+    position: absolute;
+    display: block;
     width: 854px;
-    -webkit-box-pack: center;
-    -webkit-box-align: center;
-    -webkit-box-orient: vertical;
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
-    padding: 32px 60px 60px;
+    padding: 10px 50px 50px 110px;
     font-size: 27px;
+    line-height: 1.6;
     text-shadow: 0px 2px #fff;
 }
 
-.error-container p span {
-    padding: 40px 0 10px;
-    color: #676767;
-    font-size: 22px;
-    line-height: 2.1;
-    display: -webkit-box;
+.error-container p .link {
+    color: blue;
     text-shadow: none;
+    text-decoration: underline;
+}
+
+.exit {
+    background: url(/img/exit1.png);
+    width: 79px;
+    height: 70px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.exit.hover {
+    background: url(/img/exit2.png);
 }
 
 .top-bar {
@@ -43,38 +59,17 @@ body {
     height: 58px;
     background:
         url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA2SURBVChTY/z//78kAwT8ZWRkfAVlYwAmKE0QgBT+heJ/IAH6AUYojQKweZAkz2ADNPcgAwMAOZkP+x8ViUwAAAAASUVORK5CYII="),
-        -webkit-gradient(
-                linear,
-                left top,
-                left bottom,
-                from(#fe846b),
-                color-stop(0.95, #f03d2d),
-                color-stop(0.97, #f03d2d),
-                color-stop(0.98, #d51a1a),
-                to(#d51a1a)
-            );
+        -webkit-gradient(linear,
+            left top,
+            left bottom,
+            from(#fe846b),
+            color-stop(0.95, #f03d2d),
+            color-stop(0.97, #f03d2d),
+            color-stop(0.98, #d51a1a),
+            to(#d51a1a));
     z-index: 10;
 }
 
-.top-bar:after {
-    content: "";
-    position: absolute;
-    display: block;
-    left: 0;
-    bottom: -6px;
-    width: 100%;
-    height: 6px;
-    z-index: 10;
-    background: -webkit-gradient(
-            linear,
-            left top,
-            left bottom,
-            from(#f1f1f1),
-            color-stop(0.5, #f1f1f1),
-            to(#868686)
-        )
-        0 0;
-}
 
 .top-bar.full {
     padding-left: 101px;

@@ -1,36 +1,69 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <title>This service is not available yet.</title>
-        <script src="/js/vino.js"></script>
-        <link rel="stylesheet" href="/css/vino.css" />
-    </head>
-    <body>
-        <div class="wrapper">
-            <div class="error-container">
-                <header
-                    class="top-bar full"
-                    style="position: relative"
-                    data-no-touch
-                >
-                    Error
-                </header>
-                <p>
-                    This service is not available yet. Come back later!<br />
-                    El servicio aún no está disponible. ¡Vuelve más tarde!<br />
-                    Le service n’est pas encore disponible. Revenez plus
-                    tard&nbsp;!<br />
-                    O serviço ainda não está disponível. Volte mais tarde!<br />
-                    このサービスはまだ利用できません。後でもう一度お試しください。<br />
-                    <span>
-                        Press the HOME Button to exit<br />
-                        Presiona el botón HOME para salir<br />
-                        Appuyez sur le bouton HOME pour quitter<br />
-                        Pressione o botão HOME para sair<br />
-                        HOMEボタンを押して終了します
-                    </span>
-                </p>
-            </div>
+
+<head>
+    <title>This service is not available yet.</title>
+    <script>
+        function handleScriptError() {
+            alert("Failed to load script: vino_emu.js");
+        }
+        if (!window.vino) {
+            document.write('<script src="/js/vino_emu.js"><\/script>');
+        }
+    </script>
+    <script onerror="handleScriptError()" src="/js/vino.js"></script>
+    <link rel="stylesheet" href="/css/vino.css" />
+</head>
+
+<body>
+    <img src="/img/exit1.png" style="display: none;">
+    <img src="/img/exit2.png" style="display: none;">
+
+    <div class="wrapper">
+        <a href="javascript:void(0)" class="exit"></a>
+        <div class="error-container">
+            <p>
+                Service is in development. Please join the Discord server linked in
+                <span class="link">projectrose.cafe</span> for more
+                information about the project. Come back later!<br /><br />
+
+                El servicio está en fase de desarrollo. Únete al servidor de Discord en
+                <span class="link">projectrose.cafe</span> para obtener
+                más información sobre el proyecto. ¡Vuelve más tarde!<br /><br />
+
+                Le service est en cours de développement. Rejoignez le serveur Discord lié sur
+                <span class="link">projectrose.cafe</span> pour
+                plus d’informations sur le projet. Revenez plus tard&nbsp;!<br /><br />
+
+                O serviço está em desenvolvimento. Entre no servidor do Discord vinculado em
+                <span class="link">projectrose.cafe</span> para mais
+                informações sobre o projeto. Volte mais tarde!<br /><br />
+
+                このサービスは現在開発中です。プロジェクトの詳細については、<span class="link">projectrose.cafe</span> にリンクされている Discord
+                サーバーに参加してください。後でもう一度お試しください。<br /><br />
+
+                Dieser Dienst befindet sich in der Entwicklung. Trete dem auf
+                <span class="link">projectrose.cafe</span> verlinkten Discord-Server
+                bei, um weitere Informationen über das Projekt zu erhalten. Bitte versuche es später noch
+                einmal!<br /><br />
+
+                Questo servizio è in fase di sviluppo. Unisciti al server Discord collegato su
+                <span class="link">projectrose.cafe</span> per
+                maggiori informazioni sul progetto. Torna più tardi!<br /><br />
+
+                Deze service is in ontwikkeling. Word lid van de Discord-server die is gekoppeld op
+                <span class="link">projectrose.cafe</span> voor
+                meer informatie over het project. Kom later terug!<br /><br />
+
+                Служба находится в разработке. Присоединяйтесь к серверу Discord, указанному на
+                <span class="link">projectrose.cafe</span>, чтобы
+                узнать больше о проекте. Повторите попытку позже!<br /><br />
+            </p>
+
+
+
         </div>
-    </body>
+    </div>
+</body>
+
 </html>
