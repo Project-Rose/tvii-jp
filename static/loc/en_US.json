@@ -11,7 +11,7 @@
     "vino.error.account_creation_unavailable": "Server is unavailable for\naccount creation.\n\nPlease try again later.",
     "vino.error.account_not_pretendo": "An error has occurred.\nAre you using a Pretendo Network ID?\n\nPlease connect to Pretendo and\nuse a Pretendo Network ID.",
     "vino.error.canada_region_request": "Could not get available regions\nfor Canada.\n\nPlease try again later.",
-    "vino.error.default_error": "An network error\nhas occurred.\n\nPlease try again later.",
+    "vino.error.default_error": "A network error\nhas occurred.\n\nPlease try again later.",
     "vino.error.not_supported_error": "Nintendo TVii is not supported in\nyour region yet.\n\nPlease visit projectrose.cafe for\nmore information.",
     "vino.setup.screen1.h1": "Welcome to Nintendo TVii",
     "vino.setup.screen1.p1": "Nintendo TVii allows you to easily search and check the program guide of your local TV provider, set reminders for upcoming episodes, and have discussion about new episodes on social media.",
@@ -52,7 +52,7 @@
     "vino.setup.bsky-login.p3": "Logged in to: ",
     "vino.setup.bsky-login.p4": "Log in with your Bluesky account.",
     "vino.setup.bsky-login.p5": "Logged in to your Bluesky account.",
-    "vino.setup.bsky-login.p6": "An error has ocurred.\nYou may have entered incorrect credentials,\nPlease try again.",
+    "vino.setup.bsky-login.p6": "An error has occurred.\nYou may have entered incorrect credentials.\nPlease try again.",
     "vino.setup.bsky-login.p7": "Do you really want to\nlog out of Bluesky?",
     "vino.setup.bsky-login.p8": "Could not log in.\nAccount is not active.",
     "vino.setup.bsky-login.p9": "Please enter username\nand password.",
@@ -78,3 +78,4 @@
     "vino.home.program.premiere": "Premiere Date:"
 
 }
+
